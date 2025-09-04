@@ -18,6 +18,9 @@
 
     <div class="table-responsive" id="resultContainer" style="display:none;">
       <p id="countText" class="mb-2"></p>
+      <div id="downloadContainer" class="mb-3">
+        <a id="downloadCsvBtn" href="#" class="btn btn-success btn-sm" style="display:none;" target="_blank">下载 CSV</a>
+      </div>
       <table class="table table-bordered table-striped">
         <thead class="table-light">
           <tr>
@@ -55,6 +58,7 @@
       resultContainer.style.display = "none";
       resultsTableBody.innerHTML = "";
       countText.textContent = "";
+      document.getElementById("downloadCsvBtn").style.display = "none";
 
       try {
         const response = await fetch("/api/query", {
@@ -80,6 +84,9 @@
 
         statusText.textContent = "";
         resultContainer.style.display = "block";
+        const downloadBtn = document.getElementById("downloadCsvBtn");
+        downloadBtn.href = `/download?address=${address}`;
+        downloadBtn.style.display = "inline-block";
         countText.textContent = `共 ${transfers.length} 条交易记录`;
 
         transfers.forEach((tx, idx) => {
