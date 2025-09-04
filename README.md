@@ -8,56 +8,71 @@
   🌐 <a href="README.md">English</a> | <a href="README_CN.md">简体中文</a>
 </p>
 
-**Serchain** is a beginner-friendly, open-source tool for on-chain asset tracking.  
-It helps you analyze and visualize wallet activities with simple CLI commands.
+Serchain is an open-source project focused on user-friendly design, clean visuals, and easy deployment. It allows quick lookup of on-chain transfer history for any Ethereum address. Currently supports ETH mainnet with web-based queries and CSV export.
 
 ## Features
-- 🔍 Track wallet transfers (📥 Received / 📤 Sent)
-- ⛽ Display gas fees for each transaction
-- 📄 Export transactions to CSV
-- 🌐 No API key required — powered by Serchain remote API *(or use your own Alchemy key)*
 
-## Installation
+- Track recent on-chain transfers by entering any Ethereum address
+- View transaction time, direction, counterparty address, value, asset type, and gas fee
+- One-click CSV download for local analysis and archiving
+- Responsive layout, mobile-friendly
+- No wallet connection or user login required
+
+## Project Structure
+
+```
+Serchain/
+├── webapp/            # Flask backend + HTML frontend
+│   ├── templates/
+│   │   └── index.html
+│   ├── static/        # Optional styles/scripts
+│   └── app.py         # Backend service logic
+│
+├── serchain.py        # Core querying logic (CLI available)
+├── requirements.txt   # Dependencies
+├── README.md
+└── .env               # Local env vars including ALCHEMY_URL
+```
+
+## Getting Started (Local)
+
+1. Clone this repository
 
 ```bash
-git clone git@github.com:tenngoxars/serchain.git
+git clone https://github.com/tenngoxars/serchain.git
 cd serchain
+```
+
+2. Install dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-## Usage
+3. Configure `.env` file (Register at [Alchemy](https://www.alchemy.com/) to get your API key)
+
+```env
+ALCHEMY_URL=https://eth-mainnet.g.alchemy.com/v2/[your-key-here]
+```
+
+4. Run the web version
 
 ```bash
+cd webapp
+python app.py
+```
+
+5. Open in browser
+
+Go to `http://127.0.0.1:8080`
+
+## Optional: Run via CLI
+
+```
 python serchain.py
 ```
 
-Enter any address:
-
-```
-0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
-```
-
-### Example output
-
-```
-📦 Found 10 transfers:
-
-#1 📥 Received
-🕒 Time:   2024-09-01T12:30:00Z
-💸 From:   0x123...
-📥 To:     0xabc...
-💰 Value:  1.0 ETH
-⛽ Gas Fee: 0.00042 ETH
-🔗 TxHash: 0x123abc...
-```
-
-All results are also saved to CSV.
-
-## Roadmap
-- [ ] Support Solana & Bitcoin
-- [ ] Web UI with Streamlit/Next.js
-- [ ] Graph visualization of transfers
-- [ ] Suspicious transaction detection
+Follow the prompt to input an address. Transfers will be printed and saved to a CSV file automatically.
 
 ## License
-MIT License © 2025 [LemonBrandy](https://github.com/tenngoxars)
+Apache-2.0 License © 2025 [LemonBrandy](https://github.com/tenngoxars)
