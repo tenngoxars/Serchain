@@ -1,112 +1,123 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <title>Serchain Wallet Tracker</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Serchain 链上追踪器</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap">
+  <style>
+    body {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
 </head>
-<body class="p-4">
-  <div class="container">
-    <h2 class="mb-4">Serchain：链上 ETH 转账追踪工具</h2>
+<body class="bg-zinc-900 text-white min-h-screen flex items-center justify-center p-6">
+  <div class="w-full max-w-none space-y-6">
+    <h1 class="text-3xl font-bold text-center text-white">🔗 Serchain：ETH 链上资产追踪</h1>
 
-    <div class="input-group mb-3">
-      <input type="text" id="addressInput" class="form-control" placeholder="输入 ETH 地址，如 0xabc..." />
-      <button class="btn btn-primary" id="queryBtn">查询</button>
+    <div class="flex items-center justify-center gap-4">
+      <input id="addressInput" type="text" placeholder="输入 Ethereum 地址，例如 0xabc..." 
+             class="w-full max-w-md bg-zinc-800 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+             onkeydown="if(event.key==='Enter'){document.getElementById('queryBtn').click();}" />
+      <button id="queryBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium">
+        查询
+      </button>
     </div>
+    <div id="status" class="text-sm text-gray-300 text-center mt-2"></div>
 
-    <div id="status" class="mb-3 text-muted"></div>
-
-    <div class="table-responsive" id="resultContainer" style="display:none;">
-      <p id="countText" class="mb-2"></p>
-      <div id="downloadContainer" class="mb-3">
-        <a id="downloadCsvBtn" href="#" class="btn btn-success btn-sm" style="display:none;" target="_blank">下载 CSV</a>
+    <div id="resultContainer" class="hidden">
+      <p id="countText" class="text-sm text-gray-400 mb-2"></p>
+      <div class="overflow-x-auto rounded-md border border-zinc-700 w-full overflow-x-auto">
+        <table class="min-w-full text-sm text-left text-white whitespace-nowrap">
+          <thead class="bg-zinc-800 text-gray-400">
+            <tr>
+              <th class="px-4 py-2 font-bold">#</th>
+              <th class="px-4 py-2 font-bold">时间</th>
+              <th class="px-4 py-2 font-bold">方向</th>
+              <th class="px-4 py-2 font-bold whitespace-nowrap">From</th>
+              <th class="px-4 py-2 font-bold whitespace-nowrap">To</th>
+              <th class="px-4 py-2 font-bold text-right">金额</th>
+              <th class="px-4 py-2 font-bold">资产</th>
+              <th class="px-4 py-2 font-bold text-right">Gas 费 (ETH)</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTableBody" class="divide-y divide-zinc-700"></tbody>
+        </table>
       </div>
-      <table class="table table-bordered table-striped">
-        <thead class="table-light">
-          <tr>
-            <th>#</th>
-            <th>时间</th>
-            <th>方向</th>
-            <th>From</th>
-            <th>To</th>
-            <th>金额</th>
-            <th>资产</th>
-            <th>Gas费</th>
-          </tr>
-        </thead>
-        <tbody id="resultsTableBody"></tbody>
-      </table>
+
+      <div class="mt-4 text-right">
+        <a id="downloadLink" href="#" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm hidden">
+          下载 CSV
+        </a>
+      </div>
     </div>
   </div>
 
   <script>
     const queryBtn = document.getElementById('queryBtn');
     const addressInput = document.getElementById('addressInput');
+    const statusText = document.getElementById('status');
     const resultContainer = document.getElementById('resultContainer');
     const resultsTableBody = document.getElementById('resultsTableBody');
-    const statusText = document.getElementById('status');
     const countText = document.getElementById('countText');
+    const downloadLink = document.getElementById('downloadLink');
 
     queryBtn.addEventListener('click', async () => {
       const address = addressInput.value.trim();
       if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-        statusText.textContent = "请输入有效的 Ethereum 地址。";
+        statusText.textContent = "❌ 请输入有效的 Ethereum 地址。";
         return;
       }
 
-      statusText.textContent = "查询中，请稍候...";
-      resultContainer.style.display = "none";
-      resultsTableBody.innerHTML = "";
+      statusText.textContent = "⏳ 查询中...";
       countText.textContent = "";
-      document.getElementById("downloadCsvBtn").style.display = "none";
+      downloadLink.classList.add("hidden");
 
       try {
-        const response = await fetch("/api/query", {
+        const res = await fetch("/api/query", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ address })
         });
-
-        const data = await response.json();
+        const data = await res.json();
 
         if (data.error) {
-          statusText.textContent = `错误：${data.error}`;
+          statusText.textContent = `❌ 错误：${data.error}`;
           return;
         }
 
         const transfers = data.transfers;
         if (!transfers || transfers.length === 0) {
-          statusText.textContent = "未找到任何交易记录。";
+          statusText.textContent = "😶 未找到任何交易记录。";
           return;
         }
 
-        statusText.textContent = "";
-        resultContainer.style.display = "block";
-        const downloadBtn = document.getElementById("downloadCsvBtn");
-        downloadBtn.href = `/download?address=${address}`;
-        downloadBtn.style.display = "inline-block";
+        resultContainer.classList.remove("hidden");
         countText.textContent = `共 ${transfers.length} 条交易记录`;
+        statusText.textContent = "";
 
-        transfers.forEach((tx, idx) => {
+        resultsTableBody.innerHTML = "";
+        transfers.forEach((tx, i) => {
           const tr = document.createElement("tr");
-          const direction = (tx.to.toLowerCase() === address.toLowerCase()) ? "转入" : "转出";
-
+          const direction = tx.to.toLowerCase() === address.toLowerCase() ? "转入" : "转出";
           tr.innerHTML = `
-            <td>${idx + 1}</td>
-            <td>${tx.time}</td>
-            <td>${direction}</td>
-            <td>${tx.from}</td>
-            <td>${tx.to}</td>
-            <td>${tx.value}</td>
-            <td>${tx.asset}</td>
-            <td>${tx.gas_fee || '-'}</td>
+            <td class="px-4 py-2 align-top">${i + 1}</td>
+            <td class="px-4 py-2 align-top">${tx.time}</td>
+            <td class="px-4 py-2 align-top">${direction}</td>
+            <td class="px-4 py-2 whitespace-nowrap align-top">${tx.from}</td>
+            <td class="px-4 py-2 whitespace-nowrap align-top">${tx.to}</td>
+            <td class="px-4 py-2 text-right align-top">${Number(tx.value).toLocaleString("en-US", { useGrouping: false, maximumFractionDigits: 18 })}</td>
+            <td class="px-4 py-2 align-top">${tx.asset}</td>
+            <td class="px-4 py-2 text-right align-top">${tx.gas_fee || "-"}</td>
           `;
           resultsTableBody.appendChild(tr);
         });
+
+        downloadLink.href = `/download/${address}`;
+        downloadLink.classList.remove("hidden");
       } catch (err) {
-        statusText.textContent = `请求失败：${err.message}`;
+        statusText.textContent = `❌ 请求失败：${err.message}`;
       }
     });
   </script>

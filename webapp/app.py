@@ -3,6 +3,15 @@ import os
 import io
 import csv
 from flask import Flask, render_template, request, send_file
+from datetime import datetime
+
+# 时间格式化函数
+def format_timestamp(iso_str):
+    try:
+        dt = datetime.strptime(iso_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        return iso_str
 
 # 将项目根目录加入模块路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -20,6 +29,8 @@ def index():
         address = request.form.get("address", "").strip()
         if address.startswith("0x") and len(address) == 42:
             transfers = get_asset_transfers(address)
+            for tx in transfers:
+                tx['metadata']['blockTimestamp'] = format_timestamp(tx['metadata']['blockTimestamp'])
 
     return render_template("index.html", address=address, transfers=transfers)
 
@@ -77,7 +88,7 @@ def api_query():
         results = []
         for tx in transfers:
             results.append({
-                "time": tx['metadata']['blockTimestamp'],
+                "time": format_timestamp(tx['metadata']['blockTimestamp']),
                 "from": tx['from'],
                 "to": tx['to'],
                 "value": tx['value'],
