@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/logo.png" alt="Serchain Logo" width="180"/>
+  <img src="doc/logo.png" alt="Serchain Logo" width="180"/>
 </p>
 
 <h1 align="center">Serchain</h1>
