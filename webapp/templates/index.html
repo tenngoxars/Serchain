@@ -11,45 +11,143 @@
       font-family: 'JetBrains Mono', monospace;
     }
   </style>
+  <script>
+    const translations = {
+      zh: {
+        title: "Serchain 链上追踪器",
+        addressPlaceholder: "请输入 Ethereum 地址（0x 开头）",
+        queryBtn: "查询",
+        querying: "⏳ 查询中...",
+        invalidAddress: "❌ 请输入有效的 Ethereum 地址。",
+        noRecords: "😶 未找到任何交易记录。",
+        countText: (n) => `共 ${n} 条交易记录`,
+        download: "下载 CSV",
+        errorPrefix: "❌ 错误：",
+        fetchErrorPrefix: "❌ 请求失败：",
+        tableHeaders: {
+          index: "#",
+          time: "时间",
+          direction: "方向",
+          from: "发出地址",
+          to: "接收地址",
+          value: "金额",
+          asset: "资产",
+          gasFee: "Gas 费 (ETH)"
+        },
+        direction: {
+          in: "转入",
+          out: "转出"
+        }
+      },
+      en: {
+        title: "Serchain On-chain Tracker",
+        addressPlaceholder: "Enter Ethereum address (starts with 0x)",
+        queryBtn: "Search",
+        querying: "⏳ Querying...",
+        invalidAddress: "❌ Please enter a valid Ethereum address.",
+        noRecords: "😶 No transactions found.",
+        countText: (n) => `${n} transfers found`,
+        download: "Download CSV",
+        errorPrefix: "❌ Error: ",
+        fetchErrorPrefix: "❌ Request failed: ",
+        tableHeaders: {
+          index: "#",
+          time: "Time",
+          direction: "Direction",
+          from: "From",
+          to: "To",
+          value: "Value",
+          asset: "Asset",
+          gasFee: "Gas Fee (ETH)"
+        },
+        direction: {
+          in: "Received",
+          out: "Sent"
+        }
+      }
+    };
+
+    let currentLang = "zh";
+    function setLanguage(lang) {
+      currentLang = lang;
+      const t = translations[lang];
+
+      document.title = t.title;
+      document.getElementById("title").textContent = t.title;
+      document.getElementById("addressInput").placeholder = t.addressPlaceholder;
+      document.getElementById("queryBtn").textContent = t.queryBtn;
+      document.getElementById("downloadLink").textContent = t.download;
+
+      document.querySelector("th[data-key='index']").textContent = t.tableHeaders.index;
+      document.querySelector("th[data-key='time']").textContent = t.tableHeaders.time;
+      document.querySelector("th[data-key='direction']").textContent = t.tableHeaders.direction;
+      document.querySelector("th[data-key='from']").textContent = t.tableHeaders.from;
+      document.querySelector("th[data-key='to']").textContent = t.tableHeaders.to;
+      document.querySelector("th[data-key='value']").textContent = t.tableHeaders.value;
+      document.querySelector("th[data-key='asset']").textContent = t.tableHeaders.asset;
+      document.querySelector("th[data-key='gasFee']").textContent = t.tableHeaders.gasFee;
+
+      // 刷新表格内容以反映新语言
+      if (window.lastTransfers) {
+        renderTable(window.lastTransfers);
+      }
+    }
+
+    function setStatus(key, extra = "") {
+      statusText.textContent = translations[currentLang][key] + extra;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const savedLang = localStorage.getItem("serchain_lang");
+      const browserLang = navigator.language.startsWith("zh") ? "zh" : "en";
+      setLanguage(savedLang || browserLang);
+      document.getElementById("langToggle").addEventListener("click", () => {
+        const newLang = currentLang === "zh" ? "en" : "zh";
+        setLanguage(newLang);
+        localStorage.setItem("serchain_lang", newLang);
+      });
+    });
+  </script>
 </head>
-<body class="bg-zinc-900 text-white min-h-screen flex items-center justify-center p-6">
+<body class="bg-zinc-900 text-white min-h-screen flex items-center justify-center p-6 relative">
+  <div class="absolute top-4 right-4">
+    <button id="langToggle" class="text-sm text-gray-400 hover:text-white">
+      🇨🇳 简体中文 / 🇬🇧 English
+    </button>
+  </div>
   <div class="w-full max-w-none space-y-6">
-    <h1 class="text-3xl font-bold text-center text-white">🔗 Serchain：ETH 链上资产追踪</h1>
+    <h1 id="title" class="text-3xl font-bold text-center text-white"></h1>
 
     <div class="flex items-center justify-center gap-4">
-      <input id="addressInput" type="text" placeholder="输入 Ethereum 地址，例如 0xabc..." 
-             class="w-full max-w-md bg-zinc-800 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      <input id="addressInput" type="text" placeholder=""
+             class="w-full max-w-xl bg-zinc-800 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
              onkeydown="if(event.key==='Enter'){document.getElementById('queryBtn').click();}" />
-      <button id="queryBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium">
-        查询
-      </button>
+      <button id="queryBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium"></button>
     </div>
     <div id="status" class="text-sm text-gray-300 text-center mt-2"></div>
 
     <div id="resultContainer" class="hidden">
       <p id="countText" class="text-sm text-gray-400 mb-2"></p>
-      <div class="overflow-x-auto rounded-md border border-zinc-700 w-full overflow-x-auto">
+      <div class="overflow-x-auto rounded-md border border-zinc-700 w-full">
         <table class="min-w-full text-sm text-left text-white whitespace-nowrap">
           <thead class="bg-zinc-800 text-gray-400">
             <tr>
-              <th class="px-4 py-2 font-bold">#</th>
-              <th class="px-4 py-2 font-bold">时间</th>
-              <th class="px-4 py-2 font-bold">方向</th>
-              <th class="px-4 py-2 font-bold whitespace-nowrap">From</th>
-              <th class="px-4 py-2 font-bold whitespace-nowrap">To</th>
-              <th class="px-4 py-2 font-bold text-right">金额</th>
-              <th class="px-4 py-2 font-bold">资产</th>
-              <th class="px-4 py-2 font-bold text-right">Gas 费 (ETH)</th>
+              <th data-key="index" class="px-4 py-2 font-bold"></th>
+              <th data-key="time" class="px-4 py-2 font-bold"></th>
+              <th data-key="direction" class="px-4 py-2 font-bold"></th>
+              <th data-key="from" class="px-4 py-2 font-bold whitespace-nowrap"></th>
+              <th data-key="to" class="px-4 py-2 font-bold whitespace-nowrap"></th>
+              <th data-key="value" class="px-4 py-2 font-bold text-right"></th>
+              <th data-key="asset" class="px-4 py-2 font-bold"></th>
+              <th data-key="gasFee" class="px-4 py-2 font-bold text-right"></th>
             </tr>
           </thead>
           <tbody id="resultsTableBody" class="divide-y divide-zinc-700"></tbody>
         </table>
       </div>
 
-      <div class="mt-4 text-right">
-        <a id="downloadLink" href="#" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm hidden">
-          下载 CSV
-        </a>
+      <div class="mt-4 text-center">
+        <a id="downloadLink" href="#" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm hidden"></a>
       </div>
     </div>
   </div>
@@ -63,14 +161,34 @@
     const countText = document.getElementById('countText');
     const downloadLink = document.getElementById('downloadLink');
 
+    function renderTable(transfers) {
+      resultsTableBody.innerHTML = "";
+      transfers.forEach((tx, i) => {
+        const tr = document.createElement("tr");
+        const dirKey = tx.to.toLowerCase() === addressInput.value.trim().toLowerCase() ? "in" : "out";
+        const direction = translations[currentLang].direction[dirKey];
+        tr.innerHTML = `
+          <td class="px-4 py-2">${i + 1}</td>
+          <td class="px-4 py-2">${tx.time}</td>
+          <td class="px-4 py-2">${direction}</td>
+          <td class="px-4 py-2 whitespace-nowrap">${tx.from}</td>
+          <td class="px-4 py-2 whitespace-nowrap">${tx.to}</td>
+          <td class="px-4 py-2 text-right">${Number(tx.value).toLocaleString("en-US", { useGrouping: false, maximumFractionDigits: 18 })}</td>
+          <td class="px-4 py-2">${tx.asset}</td>
+          <td class="px-4 py-2 text-right">${tx.gas_fee || "-"}</td>
+        `;
+        resultsTableBody.appendChild(tr);
+      });
+    }
+
     queryBtn.addEventListener('click', async () => {
       const address = addressInput.value.trim();
       if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-        statusText.textContent = "❌ 请输入有效的 Ethereum 地址。";
+        setStatus("invalidAddress");
         return;
       }
 
-      statusText.textContent = "⏳ 查询中...";
+      setStatus("querying");
       countText.textContent = "";
       downloadLink.classList.add("hidden");
 
@@ -83,41 +201,29 @@
         const data = await res.json();
 
         if (data.error) {
-          statusText.textContent = `❌ 错误：${data.error}`;
+          setStatus("errorPrefix", data.error);
           return;
         }
 
         const transfers = data.transfers;
         if (!transfers || transfers.length === 0) {
-          statusText.textContent = "😶 未找到任何交易记录。";
+          setStatus("noRecords");
           return;
         }
 
+        window.lastTransfers = transfers;
+
         resultContainer.classList.remove("hidden");
-        countText.textContent = `共 ${transfers.length} 条交易记录`;
+        countText.textContent = translations[currentLang].countText(transfers.length);
         statusText.textContent = "";
 
-        resultsTableBody.innerHTML = "";
-        transfers.forEach((tx, i) => {
-          const tr = document.createElement("tr");
-          const direction = tx.to.toLowerCase() === address.toLowerCase() ? "转入" : "转出";
-          tr.innerHTML = `
-            <td class="px-4 py-2 align-top">${i + 1}</td>
-            <td class="px-4 py-2 align-top">${tx.time}</td>
-            <td class="px-4 py-2 align-top">${direction}</td>
-            <td class="px-4 py-2 whitespace-nowrap align-top">${tx.from}</td>
-            <td class="px-4 py-2 whitespace-nowrap align-top">${tx.to}</td>
-            <td class="px-4 py-2 text-right align-top">${Number(tx.value).toLocaleString("en-US", { useGrouping: false, maximumFractionDigits: 18 })}</td>
-            <td class="px-4 py-2 align-top">${tx.asset}</td>
-            <td class="px-4 py-2 text-right align-top">${tx.gas_fee || "-"}</td>
-          `;
-          resultsTableBody.appendChild(tr);
-        });
+        renderTable(transfers);
 
         downloadLink.href = `/download/${address}`;
+        downloadLink.textContent = translations[currentLang].download;
         downloadLink.classList.remove("hidden");
       } catch (err) {
-        statusText.textContent = `❌ 请求失败：${err.message}`;
+        setStatus("fetchErrorPrefix", err.message);
       }
     });
   </script>
