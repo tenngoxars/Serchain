@@ -24,13 +24,19 @@ npm install
 
 # 构建 Tailwind CSS
 echo "Building Tailwind CSS..."
-npm run build
+npx tailwindcss -i ./static/css/main.css -o ./static/css/output.css --minify
+BUILD_EXIT_CODE=$?
+echo "Tailwind build exit code: $BUILD_EXIT_CODE"
 
 # 确保静态目录存在并已构建完成
 mkdir -p static/css
 if [ ! -f static/css/output.css ]; then
-    echo "Error: Tailwind CSS build failed!"
+    echo "Error: output.css not found!"
+    ls -la static/css/
     exit 1
 fi
+
+echo "CSS build completed. File size:"
+ls -lh static/css/output.css
 
 echo "Build completed successfully!"

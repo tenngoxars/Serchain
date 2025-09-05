@@ -5,6 +5,9 @@ import csv
 from flask import Flask, render_template, request, send_file, url_for
 from datetime import datetime
 
+# 创建应用并配置静态文件
+app = Flask(__name__, static_url_path='/static', static_folder='static')
+
 # 时间格式化函数
 def format_timestamp(iso_str):
     try:
