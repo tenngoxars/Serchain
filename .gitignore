@@ -1,4 +1,19 @@
+# Python
 .env
 __pycache__/
 *.pyc
+*.py[cod]
+*$py.class
 data/*.csv
+
+# Node
+webapp/node_modules/
+webapp/static/css/output.css
+
+# VS Code
+.vscode/
+
+# Environment
+venv/
+env/
+.env.local
