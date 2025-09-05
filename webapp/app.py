@@ -18,7 +18,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from serchain import get_asset_transfers  # 复用已有逻辑
 from serchain import get_gas_fee
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='', static_folder='static')
+
+# 确保生产环境中正确处理静态文件
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 @app.route("/", methods=["GET", "POST"])
 def index():
