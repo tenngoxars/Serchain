@@ -48,9 +48,6 @@ Serchain/
 └── .env               # 本地环境变量，包括 ALCHEMY_URL
 ```
 
-## 演示
-
-在线演示：https://your-demo-url.example
 
 ## 本地运行指南
 

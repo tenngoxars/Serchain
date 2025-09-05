@@ -48,9 +48,6 @@ Serchain/
 └── .env               # Local env vars including ALCHEMY_URL
 ```
 
-## Demo
-
-Live demo: https://your-demo-url.example
 
 ## Getting Started (Local)
 
