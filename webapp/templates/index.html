@@ -8,6 +8,45 @@
   <title>Serchain 链上追踪器</title>
   <link href="{{ url_for('static', filename='css/output.css') }}" rel="stylesheet">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap">
+  <style>
+    /* 保留必要的自定义样式 */
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background-color: #000000;
+      color: #ffffff;
+    }
+    .form-input {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.5);
+    }
+  </style>
   <script>
     const translations = {
       zh: {
