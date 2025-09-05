@@ -1,0 +1,30 @@
+{
+  "name": "serchain",
+  "version": "1.0.0",
+  "description": "<p align=\"center\">   <img src=\"doc/logo.png\" alt=\"Serchain Logo\" width=\"180\"/> </p>",
+  "main": "index.js",
+  "directories": {
+    "doc": "doc"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tailwindcss -i ./static/css/main.css -o ./static/css/output.css",
+    "watch": "npx tailwindcss -i ./static/css/main.css -o ./static/css/output.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tenngoxars/serchain.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tenngoxars/serchain/issues"
+  },
+  "homepage": "https://github.com/tenngoxars/serchain#readme",
+  "devDependencies": {
+    "autoprefixer": "^10.4.15",
+    "postcss": "^8.4.29",
+    "tailwindcss": "^3.3.3"
+  }
+}
