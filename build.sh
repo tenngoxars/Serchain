@@ -2,8 +2,22 @@
 set -x  # 启用调试模式，显示执行的每个命令
 
 echo "Current directory: $(pwd)"
-echo "Listing directory contents:"
-ls -la
+
+# 安装 Node.js
+echo "Installing Node.js..."
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash - || {
+    echo "Failed to setup Node.js repository"
+    exit 1
+}
+apt-get update && apt-get install -y nodejs || {
+    echo "Failed to install Node.js"
+    exit 1
+}
+
+# 验证 Node.js 安装
+echo "Verifying Node.js installation..."
+node --version
+npm --version
 
 # 安装 Python 依赖
 echo "Installing Python dependencies..."
@@ -19,18 +33,6 @@ cd webapp || {
 echo "Current directory after cd: $(pwd)"
 echo "Listing webapp directory contents:"
 ls -la
-
-# 检查 Node.js 安装
-echo "Checking Node.js installation..."
-node --version || {
-    echo "Node.js is not available"
-    exit 1
-}
-
-npm --version || {
-    echo "npm is not available"
-    exit 1
-}
 
 # 检查 Node.js 版本
 NODE_VERSION=$(node -v)
