@@ -2,11 +2,10 @@ import sys
 import os
 import io
 import csv
-from flask import Flask, render_template, request, send_file, url_for
+from flask import Flask, render_template, request, send_file, url_for, jsonify
 from datetime import datetime
 
 # 创建应用并配置静态文件
-app = Flask(__name__, static_url_path='/static', static_folder='static')
 
 # 时间格式化函数
 def format_timestamp(iso_str):
@@ -21,7 +20,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from serchain import get_asset_transfers  # 复用已有逻辑
 from serchain import get_gas_fee
 
-app = Flask(__name__, static_url_path='', static_folder='static')
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 
 # 确保生产环境中正确处理静态文件
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
@@ -59,9 +58,10 @@ def download_csv():
         _to = tx['to']
         direction = "Received" if _to.lower() == address.lower() else "Sent"
         gas_fee = get_gas_fee(tx['hash'])
+        ts = format_timestamp(tx['metadata']['blockTimestamp'])
         writer.writerow([
             direction,
-            tx['metadata']['blockTimestamp'],
+            ts,
             _from,
             _to,
             tx['value'],
@@ -78,8 +78,6 @@ def download_csv():
         as_attachment=True,
         download_name=filename
     )
-
-from flask import jsonify, request
 
 @app.route("/api/query", methods=["POST"])
 def api_query():

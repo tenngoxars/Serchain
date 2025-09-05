@@ -17,3 +17,17 @@ webapp/static/css/output.css
 venv/
 env/
 .env.local
+
+# Logs
+*.log
+
+# macOS system files
+.DS_Store
+
+# Build cache
+.cache/
+.parcel-cache/
+
+# Package manager lock files (optional)
+Pipfile.lock
+poetry.lock

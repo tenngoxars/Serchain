@@ -2,10 +2,18 @@
 module.exports = {
   content: [
     "./templates/**/*.{html,js}",
-    "./static/**/*.{js,css}"
+    "./static/**/*.{js,ts}"
   ],
+  safelist: [
+    { pattern: /text-(center|right)/ },
+    { pattern: /(overflow-x|whitespace)-.*/ }
+  ],
+  darkMode: 'class',
   theme: {
     extend: {
+      colors: {
+        primary: "#c846c2",
+      },
       fontFamily: {
         mono: ['JetBrains Mono', 'monospace'],
       },
