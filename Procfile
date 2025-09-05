@@ -1,1 +1,1 @@
-web: bash build.sh && cd webapp && python app.py
+web: export NODE_ENV=production && bash build.sh && cd webapp && python app.py
