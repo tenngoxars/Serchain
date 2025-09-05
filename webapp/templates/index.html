@@ -24,6 +24,8 @@
         download: "下载 CSV",
         errorPrefix: "❌ 错误：",
         fetchErrorPrefix: "❌ 请求失败：",
+        historyLabel: "历史查询：",
+        clearHistory: "清空历史",
         tableHeaders: {
           index: "#",
           time: "时间",
@@ -50,6 +52,8 @@
         download: "Download CSV",
         errorPrefix: "❌ Error: ",
         fetchErrorPrefix: "❌ Request failed: ",
+        historyLabel: "History:",
+        clearHistory: "Clear History",
         tableHeaders: {
           index: "#",
           time: "Time",
@@ -70,22 +74,22 @@
     let currentLang = "zh";
     function setLanguage(lang) {
       currentLang = lang;
-      const t = translations[lang];
+      const currentTranslations = translations[lang];
 
-      document.title = t.title;
-      document.getElementById("title").textContent = t.title;
-      document.getElementById("addressInput").placeholder = t.addressPlaceholder;
-      document.getElementById("queryBtn").textContent = t.queryBtn;
-      document.getElementById("downloadLink").textContent = t.download;
+      document.title = currentTranslations.title;
+      document.getElementById("title").textContent = currentTranslations.title;
+      document.getElementById("addressInput").placeholder = currentTranslations.addressPlaceholder;
+      document.getElementById("queryBtn").textContent = currentTranslations.queryBtn;
+      document.getElementById("downloadLink").textContent = currentTranslations.download;
 
-      document.querySelector("th[data-key='index']").textContent = t.tableHeaders.index;
-      document.querySelector("th[data-key='time']").textContent = t.tableHeaders.time;
-      document.querySelector("th[data-key='direction']").textContent = t.tableHeaders.direction;
-      document.querySelector("th[data-key='from']").textContent = t.tableHeaders.from;
-      document.querySelector("th[data-key='to']").textContent = t.tableHeaders.to;
-      document.querySelector("th[data-key='value']").textContent = t.tableHeaders.value;
-      document.querySelector("th[data-key='asset']").textContent = t.tableHeaders.asset;
-      document.querySelector("th[data-key='gasFee']").textContent = t.tableHeaders.gasFee;
+      document.querySelector("th[data-key='index']").textContent = currentTranslations.tableHeaders.index;
+      document.querySelector("th[data-key='time']").textContent = currentTranslations.tableHeaders.time;
+      document.querySelector("th[data-key='direction']").textContent = currentTranslations.tableHeaders.direction;
+      document.querySelector("th[data-key='from']").textContent = currentTranslations.tableHeaders.from;
+      document.querySelector("th[data-key='to']").textContent = currentTranslations.tableHeaders.to;
+      document.querySelector("th[data-key='value']").textContent = currentTranslations.tableHeaders.value;
+      document.querySelector("th[data-key='asset']").textContent = currentTranslations.tableHeaders.asset;
+      document.querySelector("th[data-key='gasFee']").textContent = currentTranslations.tableHeaders.gasFee;
 
       // 刷新表格内容以反映新语言
       if (window.lastTransfers) {
@@ -97,6 +101,14 @@
       statusText.textContent = translations[currentLang][key] + extra;
     }
 
+    function getHistory() {
+      return JSON.parse(localStorage.getItem("serchain_history") || "[]");
+    }
+
+    function setHistory(historyArray) {
+      localStorage.setItem("serchain_history", JSON.stringify(historyArray));
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       const savedLang = localStorage.getItem("serchain_lang");
       const browserLang = navigator.language.startsWith("zh") ? "zh" : "en";
@@ -105,7 +117,9 @@
         const newLang = currentLang === "zh" ? "en" : "zh";
         setLanguage(newLang);
         localStorage.setItem("serchain_lang", newLang);
+        renderHistory(); // 只在点击切换时更新历史 UI
       });
+      renderHistory();
     });
   </script>
 </head>
@@ -115,14 +129,17 @@
       🇨🇳 简体中文 / 🇬🇧 English
     </button>
   </div>
-  <div class="w-full max-w-none space-y-6">
+  <main class="w-full max-w-none space-y-6">
     <h1 id="title" class="text-3xl font-bold text-center text-white"></h1>
 
-    <div class="flex items-center justify-center gap-4">
-      <input id="addressInput" type="text" placeholder=""
-             class="w-full max-w-xl bg-zinc-800 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-             onkeydown="if(event.key==='Enter'){document.getElementById('queryBtn').click();}" />
-      <button id="queryBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium"></button>
+    <div class="w-full max-w-none flex flex-col items-center space-y-2">
+      <div class="w-full max-w-none flex items-center justify-center gap-4">
+        <input id="addressInput" type="text" placeholder=""
+               class="flex-1 max-w-[540px] bg-zinc-800 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+               onkeydown="if(event.key==='Enter'){document.getElementById('queryBtn').click();}" />
+        <button id="queryBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium"></button>
+      </div>
+      <div id="historyContainer" class="flex justify-center items-center gap-2 text-sm text-gray-400 flex-wrap"></div>
     </div>
     <div id="status" class="text-sm text-gray-300 text-center mt-2"></div>
 
@@ -132,14 +149,14 @@
         <table class="min-w-full text-sm text-left text-white whitespace-nowrap">
           <thead class="bg-zinc-800 text-gray-400">
             <tr>
-              <th data-key="index" class="px-4 py-2 font-bold"></th>
-              <th data-key="time" class="px-4 py-2 font-bold"></th>
-              <th data-key="direction" class="px-4 py-2 font-bold"></th>
-              <th data-key="from" class="px-4 py-2 font-bold whitespace-nowrap"></th>
-              <th data-key="to" class="px-4 py-2 font-bold whitespace-nowrap"></th>
-              <th data-key="value" class="px-4 py-2 font-bold text-right"></th>
-              <th data-key="asset" class="px-4 py-2 font-bold"></th>
-              <th data-key="gasFee" class="px-4 py-2 font-bold text-right"></th>
+              <th data-key="index" class="px-4 py-2 font-bold text-center"></th>
+              <th data-key="time" class="px-4 py-2 font-bold text-center"></th>
+              <th data-key="direction" class="px-4 py-2 font-bold text-center"></th>
+              <th data-key="from" class="px-4 py-2 font-bold whitespace-nowrap text-center"></th>
+              <th data-key="to" class="px-4 py-2 font-bold whitespace-nowrap text-center"></th>
+              <th data-key="value" class="px-4 py-2 font-bold text-center"></th>
+              <th data-key="asset" class="px-4 py-2 font-bold text-center"></th>
+              <th data-key="gasFee" class="px-4 py-2 font-bold text-center"></th>
             </tr>
           </thead>
           <tbody id="resultsTableBody" class="divide-y divide-zinc-700"></tbody>
@@ -150,7 +167,7 @@
         <a id="downloadLink" href="#" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm hidden"></a>
       </div>
     </div>
-  </div>
+  </main>
 
   <script>
     const queryBtn = document.getElementById('queryBtn');
@@ -162,8 +179,9 @@
     const downloadLink = document.getElementById('downloadLink');
 
     function renderTable(transfers) {
+      // Optional: could use DocumentFragment for large tables
       resultsTableBody.innerHTML = "";
-      transfers.forEach((tx, i) => {
+      transfers.slice().reverse().forEach((tx, i) => {
         const tr = document.createElement("tr");
         const dirKey = tx.to.toLowerCase() === addressInput.value.trim().toLowerCase() ? "in" : "out";
         const direction = translations[currentLang].direction[dirKey];
@@ -179,6 +197,65 @@
         `;
         resultsTableBody.appendChild(tr);
       });
+    }
+
+    function renderHistory() {
+      const currentTranslations = translations[currentLang];
+      const historyContainer = document.getElementById("historyContainer");
+
+      historyContainer.innerHTML = "";
+
+      const history = getHistory();
+
+      if (history.length === 0) {
+        return;
+      }
+
+      const label = document.createElement("div");
+      label.id = "historyLabel";
+      label.textContent = currentTranslations.historyLabel;
+      label.className = "text-sm text-gray-300 flex items-center";
+      historyContainer.appendChild(label);
+
+      history.forEach((addr) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "flex items-center";
+
+        const btn = document.createElement("button");
+        const display = addr.slice(0, 6) + "..." + addr.slice(-4);
+        btn.textContent = display;
+        btn.title = addr;
+        btn.className = "px-2 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 border border-zinc-600";
+        btn.onclick = () => {
+          addressInput.value = addr;
+          queryBtn.click();
+        };
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "❌";
+        delBtn.className = "ml-1 text-gray-400 hover:text-red-500 cursor-pointer";
+        delBtn.title = "Delete";
+        delBtn.onclick = () => {
+          let currentHistory = getHistory();
+          currentHistory = currentHistory.filter(item => item !== addr);
+          setHistory(currentHistory);
+          renderHistory();
+        };
+
+        wrapper.appendChild(btn);
+        wrapper.appendChild(delBtn);
+        historyContainer.appendChild(wrapper);
+      });
+
+      const clearBtn = document.createElement("button");
+      clearBtn.textContent = currentTranslations.clearHistory;
+      clearBtn.className = "text-sm text-gray-400 hover:text-red-500 cursor-pointer ml-4";
+      clearBtn.title = currentTranslations.clearHistory;
+      clearBtn.onclick = () => {
+        localStorage.removeItem("serchain_history");
+        renderHistory();
+      };
+      historyContainer.appendChild(clearBtn);
     }
 
     queryBtn.addEventListener('click', async () => {
@@ -222,6 +299,17 @@
         downloadLink.href = `/download/${address}`;
         downloadLink.textContent = translations[currentLang].download;
         downloadLink.classList.remove("hidden");
+
+        // Update history
+        let history = getHistory();
+        if (!history.includes(address)) {
+          history.unshift(address);
+          if (history.length > 10) {
+            history.pop();
+          }
+          setHistory(history);
+          renderHistory();
+        }
       } catch (err) {
         setStatus("fetchErrorPrefix", err.message);
       }
