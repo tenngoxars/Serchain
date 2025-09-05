@@ -7,11 +7,11 @@ pip install -r requirements.txt
 # 进入 webapp 目录
 cd webapp || exit
 
-# 确保 nodejs 和 npm 已安装
-if ! command -v node &> /dev/null || ! command -v npm &> /dev/null; then
-    echo "Installing Node.js and npm..."
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-    apt-get install -y nodejs
+# 使用 Railway 默认提供的 Node.js
+echo "Checking Node.js installation..."
+if ! command -v node &> /dev/null; then
+    echo "Error: Node.js not found!"
+    exit 1
 fi
 
 # 检查 Node.js 版本
