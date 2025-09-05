@@ -12,6 +12,7 @@ Serchain is an open-source project focused on user-friendly design, clean visual
 
 ## Features
 
+- 🌐 Multi-language support (English / 中文)
 - Track recent on-chain transfers by entering any Ethereum address
 - View transaction time, direction, counterparty address, value, asset type, and gas fee
 - One-click CSV download for local analysis and archiving
@@ -27,6 +28,8 @@ Serchain/
 │   ├── templates/
 │   │   └── index.html
 │   ├── static/        # Tailwind CSS styles/scripts
+│   │   └── css/
+│   │       └── output.css  # Tailwind build output
 │   ├── app.py         # Backend service logic
 │   └── package.json   # Frontend dependencies
 │
@@ -68,7 +71,7 @@ ALCHEMY_URL=https://eth-mainnet.g.alchemy.com/v2/[your-key-here]
 5. Build Tailwind CSS
 
 ```bash
-npm run build
+npm run build:css
 ```
 
 6. Run the web version
@@ -106,16 +109,12 @@ python serchain.py
 
 Example input and output:
 
-```plaintext
-Enter Ethereum address (starts with 0x): 0x1234567890abcdef1234567890abcdef12345678
-Fetching transfer history...
-
-#  Time                 Direction  From                                   To                                     Value    Asset  Gas Fee (ETH)
-1  2025-09-01 12:00:00  Outgoing  0x1234567890abcdef1234567890abcdef12345678  0xabcdefabcdefabcdefabcdefabcdefabcdef  1.23     ETH    0.001
-2  2025-09-01 13:00:00  Incoming  0xabcdefabcdefabcdefabcdefabcdefabcdef  0x1234567890abcdef1234567890abcdef12345678  0.45     ETH    0.0005
+| #  | Time                 | Direction | From                                    | To                                      | Value | Asset | Gas Fee (ETH) |
+|----|----------------------|-----------|-----------------------------------------|-----------------------------------------|-------|-------|---------------|
+| 1  | 2025-09-01 12:00:00  | Outgoing  | 0x1234567890abcdef1234567890abcdef12345678 | 0xabcdefabcdefabcdefabcdefabcdefabcdef | 1.23  | ETH   | 0.001         |
+| 2  | 2025-09-01 13:00:00  | Incoming  | 0xabcdefabcdefabcdefabcdefabcdefabcdef  | 0x1234567890abcdef1234567890abcdef12345678 | 0.45  | ETH   | 0.0005        |
 
 Results saved to transfers.csv
-```
 
 ## Deployment (Railway)
 
@@ -123,14 +122,20 @@ Results saved to transfers.csv
    - `ALCHEMY_URL`: Your Alchemy API key
 
 2. Configure Build and Start Commands:
-   - **Build Command**:
-     ```bash
-     apt-get update && apt-get install -y curl && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt-get install -y nodejs && npm install --prefix webapp && npm run build --prefix webapp
-     ```
-   - **Start Command**:
-     ```bash
-     python webapp/app.py
-     ```
+
+- **Build Command (recommended)**:
+  ```bash
+  pip install -r requirements.txt && cd webapp && npm ci --no-audit --no-fund && npm run build:css
+  ```
+- **Build Command (alternative)**:
+  ```bash
+  pip install -r requirements.txt && cd webapp && npm install && npm run build:css
+  ```
+
+- **Start Command**:
+  ```bash
+  gunicorn -b 0.0.0.0:$PORT webapp.app:app
+  ```
 
 3. Deploy and monitor logs for any issues.
 
