@@ -1,2 +1,2 @@
 web: export NODE_ENV=production && cd webapp && python app.py
-build: npm install --prefix webapp && npm run build --prefix webapp
+build: curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt-get install -y nodejs && npm install --prefix webapp && npm run build --prefix webapp
