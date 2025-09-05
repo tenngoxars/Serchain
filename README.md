@@ -5,20 +5,28 @@
 <h1 align="center">Serchain</h1>
 
 <p align="center">
-  🌐 <a href="README.md">English</a> | <a href="README_CN.md">简体中文</a>
+  English | <a href="README_CN.md">简体中文</a>
+</p>
+<p align="center">
+  <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge" alt="License"></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10%2B-blue?style=for-the-badge" alt="Python"></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node.js-18.x-green?style=for-the-badge" alt="Node.js"></a>
+  <a href="https://railway.app/"><img src="https://img.shields.io/badge/deploy-railway-purple?style=for-the-badge" alt="Railway"></a>
 </p>
 
-Serchain is an open-source project focused on user-friendly design, clean visuals, and easy deployment. It allows quick lookup of on-chain transfer history for any Ethereum address. Currently supports ETH mainnet with web-based queries and CSV export.
+Serchain is an open-source, user-friendly on-chain transfer explorer for Ethereum. It supports quick, web-based lookups and CSV export on mainnet.
 
 ## Features
 
-- 🌐 Multi-language support (English / 中文)
 - Track recent on-chain transfers by entering any Ethereum address
 - View transaction time, direction, counterparty address, value, asset type, and gas fee
-- One-click CSV download for local analysis and archiving
-- Responsive layout, mobile-friendly
-- No wallet connection or user login required
-- Tailwind CSS for modern styling
+- Download CSV with one click for local analysis and archiving
+- Support multi-language (English / 中文)
+- Provide responsive layout and mobile-friendly interface
+- Require no wallet connection or user login
+- Use Tailwind CSS for modern styling
+
+Copy .env.example to .env and fill your credentials.
 
 ## Project Structure
 
@@ -39,6 +47,10 @@ Serchain/
 ├── README.md
 └── .env               # Local env vars including ALCHEMY_URL
 ```
+
+## Demo
+
+Live demo: https://your-demo-url.example
 
 ## Getting Started (Local)
 
@@ -67,6 +79,8 @@ npm install
 ```env
 ALCHEMY_URL=https://eth-mainnet.g.alchemy.com/v2/[your-key-here]
 ```
+
+> Do **not** commit .env to version control.
 
 5. Build Tailwind CSS
 
@@ -138,6 +152,18 @@ Results saved to transfers.csv
   ```
 
 3. Deploy and monitor logs for any issues.
+
+## Troubleshooting
+
+- **Issue:** Web app not starting or crashing on launch  
+  **Solution:** Check that all dependencies are installed correctly and environment variables (especially `ALCHEMY_URL`) are properly set.
+
+- **Issue:** CSS styles not appearing or broken layout  
+  **Solution:** Ensure Tailwind CSS is built by running `npm run build:css` in the `webapp` directory and that the static files are correctly served.
+
+## Contributing
+
+PRs and issues are welcome!
 
 ## License
 Apache-2.0 License © 2025 [LemonBrandy](https://github.com/tenngoxars)
