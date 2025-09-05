@@ -8,8 +8,9 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx tailwindcss -i ./static/css/main.css -o ./static/css/output.css",
-    "watch": "npx tailwindcss -i ./static/css/main.css -o ./static/css/output.css --watch"
+    "build": "tailwindcss -i ./static/css/main.css -o ./static/css/output.css",
+    "watch": "tailwindcss -i ./static/css/main.css -o ./static/css/output.css --watch",
+    "start": "npm install && npm run build"
   },
   "repository": {
     "type": "git",
