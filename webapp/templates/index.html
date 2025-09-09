@@ -47,226 +47,6 @@
       background: rgba(0, 0, 0, 0.5);
     }
   </style>
-  <script>
-    const translations = {
-      zh: {
-        title: "Serchain 链上追踪器",
-        addressPlaceholder: "请输入 Ethereum 地址（0x 开头）",
-        queryBtn: "查询",
-        querying: "⏳ 查询中...",
-        invalidAddress: "❌ 请输入有效的 Ethereum 地址。",
-        noRecords: "😶 未找到任何交易记录。",
-        countText: (n) => `共 ${n} 条交易记录`,
-        download: "下载 CSV",
-        errorPrefix: "❌ 错误：",
-        fetchErrorPrefix: "❌ 请求失败：",
-        historyLabel: "历史查询：",
-        clearHistory: "清空历史",
-        tableHeaders: {
-          index: "#",
-          time: "时间",
-          direction: "方向",
-          from: "发出地址",
-          to: "接收地址",
-          value: "金额",
-          asset: "资产",
-          gasFee: "Gas 费 (ETH)"
-        },
-        direction: {
-          in: "转入",
-          out: "转出"
-        },
-        toggleLabel: "🇨🇳 简体中文 / 🇬🇧 English",
-      },
-      en: {
-        title: "Serchain On-chain Tracker",
-        addressPlaceholder: "Enter Ethereum address (starts with 0x)",
-        queryBtn: "Search",
-        querying: "⏳ Querying...",
-        invalidAddress: "❌ Please enter a valid Ethereum address.",
-        noRecords: "😶 No transactions found.",
-        countText: (n) => `${n} transfers found`,
-        download: "Download CSV",
-        errorPrefix: "❌ Error: ",
-        fetchErrorPrefix: "❌ Request failed: ",
-        historyLabel: "History:",
-        clearHistory: "Clear History",
-        tableHeaders: {
-          index: "#",
-          time: "Time",
-          direction: "Direction",
-          from: "From",
-          to: "To",
-          value: "Value",
-          asset: "Asset",
-          gasFee: "Gas Fee (ETH)"
-        },
-        direction: {
-          in: "Received",
-          out: "Sent"
-        },
-        toggleLabel: "🇨🇳 Chinese / 🇬🇧 English",
-      }
-    };
-
-    let currentLang = "zh";
-
-    function setLanguage(lang) {
-      document.documentElement.setAttribute("lang", lang === "zh" ? "zh-CN" : "en");
-      currentLang = lang;
-      const currentTranslations = translations[lang];
-
-      document.title = currentTranslations.title;
-      document.getElementById("title").textContent = currentTranslations.title;
-      document.getElementById("addressInput").placeholder = currentTranslations.addressPlaceholder;
-      document.getElementById("queryBtn").textContent = currentTranslations.queryBtn;
-      document.getElementById("downloadLink").textContent = currentTranslations.download;
-      document.getElementById("langToggle").textContent = currentTranslations.toggleLabel;
-
-      document.querySelector("th[data-key='index']").textContent = currentTranslations.tableHeaders.index;
-      document.querySelector("th[data-key='time']").textContent = currentTranslations.tableHeaders.time;
-      document.querySelector("th[data-key='direction']").textContent = currentTranslations.tableHeaders.direction;
-      document.querySelector("th[data-key='from']").textContent = currentTranslations.tableHeaders.from;
-      document.querySelector("th[data-key='to']").textContent = currentTranslations.tableHeaders.to;
-      document.querySelector("th[data-key='value']").textContent = currentTranslations.tableHeaders.value;
-      document.querySelector("th[data-key='asset']").textContent = currentTranslations.tableHeaders.asset;
-      document.querySelector("th[data-key='gasFee']").textContent = currentTranslations.tableHeaders.gasFee;
-
-      // 刷新表格内容以反映新语言
-      if (window.lastTransfers) {
-        renderTable(window.lastTransfers);
-      }
-    }
-
-    function setStatus(key, extra = "") {
-      const msg = translations[currentLang][key];
-      statusText.textContent = typeof msg === "function" ? msg(extra) : (msg ?? "") + (extra ?? "");
-    }
-
-    function getHistory() {
-      return JSON.parse(localStorage.getItem("serchain_history") || "[]");
-    }
-
-    function setHistory(historyArray) {
-      localStorage.setItem("serchain_history", JSON.stringify(historyArray));
-    }
-
-    function renderTable(transfers) {
-      // Optional: could use DocumentFragment for large tables
-      resultsTableBody.innerHTML = "";
-      const timeFormatter = new Intl.DateTimeFormat(currentLang === "zh" ? "zh-CN" : "en-US", {
-        dateStyle: "short",
-        timeStyle: "medium",
-      });
-      transfers.slice().reverse().forEach((tx, i) => {
-        const tr = document.createElement("tr");
-        const dirKey = tx.to.toLowerCase() === addressInput.value.trim().toLowerCase() ? "in" : "out";
-        const direction = translations[currentLang].direction[dirKey];
-        tr.innerHTML = `
-          <td class="px-4 py-2">${i + 1}</td>
-          <td class="px-4 py-2">${timeFormatter.format(new Date(tx.time))}</td>
-          <td class="px-4 py-2">${direction}</td>
-          <td class="px-4 py-2 whitespace-nowrap">${tx.from}</td>
-          <td class="px-4 py-2 whitespace-nowrap">${tx.to}</td>
-          <td class="px-4 py-2 text-right">${Number(tx.value).toLocaleString("en-US", { useGrouping: false, maximumFractionDigits: 18 })}</td>
-          <td class="px-4 py-2">${tx.asset}</td>
-          <td class="px-4 py-2 text-right">${tx.gas_fee || "-"}</td>
-        `;
-        resultsTableBody.appendChild(tr);
-      });
-    }
-
-    function renderHistory() {
-      const currentTranslations = translations[currentLang];
-      const historyContainer = document.getElementById("historyContainer");
-
-      historyContainer.className = "flex flex-wrap justify-center gap-2 items-center";
-      historyContainer.innerHTML = "";
-
-      const history = getHistory();
-
-      if (history.length === 0) {
-        return;
-      }
-
-      const label = document.createElement("div");
-      label.id = "historyLabel";
-      label.textContent = currentTranslations.historyLabel;
-      label.className = "text-sm text-gray-300 flex items-center";
-      historyContainer.appendChild(label);
-
-      history.forEach((addr) => {
-        const wrapper = document.createElement("div");
-        wrapper.className = "flex items-center";
-
-        const btn = document.createElement("button");
-        const display = addr.slice(0, 6) + "..." + addr.slice(-4);
-        btn.textContent = display;
-        btn.title = addr;
-        btn.className = "px-2 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 border border-zinc-600";
-        btn.onclick = () => {
-          addressInput.value = addr;
-          queryBtn.click();
-        };
-
-        const delBtn = document.createElement("button");
-        delBtn.innerHTML = '<span aria-label="Delete" role="img">❌</span>';
-        delBtn.className = "ml-1 text-gray-400 hover:text-red-500 cursor-pointer";
-        delBtn.title = "Delete";
-        delBtn.onclick = () => {
-          let currentHistory = getHistory();
-          currentHistory = currentHistory.filter(item => item !== addr);
-          setHistory(currentHistory);
-          renderHistory();
-        };
-
-        wrapper.appendChild(btn);
-        wrapper.appendChild(delBtn);
-        historyContainer.appendChild(wrapper);
-      });
-
-      const clearBtn = document.createElement("button");
-      clearBtn.textContent = currentTranslations.clearHistory;
-      clearBtn.className = "text-sm text-gray-400 hover:text-red-500 cursor-pointer ml-4";
-      clearBtn.title = currentTranslations.clearHistory;
-      clearBtn.onclick = () => {
-        localStorage.removeItem("serchain_history");
-        renderHistory();
-      };
-      historyContainer.appendChild(clearBtn);
-    }
-
-    function onReady() {
-      const savedLang = localStorage.getItem("serchain_lang");
-      const browserLang = navigator.language.startsWith("zh") ? "zh" : "en";
-      setLanguage(savedLang || browserLang);
-      document.getElementById("langToggle").addEventListener("click", () => {
-        const newLang = currentLang === "zh" ? "en" : "zh";
-        setLanguage(newLang);
-        localStorage.setItem("serchain_lang", newLang);
-        renderHistory(); // 只在点击切换时更新历史 UI
-      });
-      renderHistory();
-
-      VANTA.NET({
-        el: "#vanta-bg",
-        mouseControls: true,
-        touchControls: true,
-        gyroControls: false,
-        minHeight: 200.00,
-        minWidth: 200.00,
-        scale: 1.00,
-        scaleMobile: 1.00,
-        color: 0xc846c2,
-        backgroundColor: 0x23153c,
-        points: 12.0,
-        maxDistance: 22.0,
-        spacing: 18.0
-      });
-    }
-
-    document.addEventListener("DOMContentLoaded", onReady);
-  </script>
 </head>
 <body id="vanta-bg" class="bg-zinc-900 text-white min-h-screen flex items-center justify-center p-6 relative">
   <div class="absolute top-4 right-4">
@@ -279,7 +59,7 @@
       <div class="w-full flex items-center justify-center gap-4">
         <input id="addressInput" type="text" placeholder=""
                class="flex-1 max-w-[540px] bg-zinc-800 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-               onkeydown="if(event.key==='Enter'){document.getElementById('queryBtn').click();}" />
+        />
         <button id="queryBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium"></button>
       </div>
       <div id="historyContainer" class="flex justify-center items-center gap-2 text-sm text-gray-400 flex-wrap"></div>
@@ -292,14 +72,14 @@
         <table class="min-w-full text-sm text-left text-white whitespace-nowrap">
           <thead class="bg-zinc-800 text-gray-400">
             <tr>
-              <th data-key="index" class="px-4 py-2 font-bold text-center"></th>
-              <th data-key="time" class="px-4 py-2 font-bold text-center"></th>
-              <th data-key="direction" class="px-4 py-2 font-bold text-center"></th>
-              <th data-key="from" class="px-4 py-2 font-bold whitespace-nowrap text-center"></th>
-              <th data-key="to" class="px-4 py-2 font-bold whitespace-nowrap text-center"></th>
-              <th data-key="value" class="px-4 py-2 font-bold text-center"></th>
-              <th data-key="asset" class="px-4 py-2 font-bold text-center"></th>
-              <th data-key="gasFee" class="px-4 py-2 font-bold text-center"></th>
+              <th id="th-index" data-key="index" class="px-4 py-2 font-bold text-center"></th>
+              <th id="th-time" data-key="time" class="px-4 py-2 font-bold text-center"></th>
+              <th id="th-direction" data-key="direction" class="px-4 py-2 font-bold text-center"></th>
+              <th id="th-from" data-key="from" class="px-4 py-2 font-bold whitespace-nowrap text-center"></th>
+              <th id="th-to" data-key="to" class="px-4 py-2 font-bold whitespace-nowrap text-center"></th>
+              <th id="th-value" data-key="value" class="px-4 py-2 font-bold text-center"></th>
+              <th id="th-asset" data-key="asset" class="px-4 py-2 font-bold text-center"></th>
+              <th id="th-gas" data-key="gasFee" class="px-4 py-2 font-bold text-center"></th>
             </tr>
           </thead>
           <tbody id="resultsTableBody" class="divide-y divide-zinc-700"></tbody>
@@ -312,71 +92,15 @@
     </div>
   </main>
 
-  <script>
-    const queryBtn = document.getElementById('queryBtn');
-    const addressInput = document.getElementById('addressInput');
-    const statusText = document.getElementById('status');
-    const resultContainer = document.getElementById('resultContainer');
-    const resultsTableBody = document.getElementById('resultsTableBody');
-    const countText = document.getElementById('countText');
-    const downloadLink = document.getElementById('downloadLink');
-
-    queryBtn.addEventListener('click', async () => {
-      const address = addressInput.value.trim();
-      if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-        setStatus("invalidAddress");
-        return;
-      }
-
-      setStatus("querying");
-      countText.textContent = "";
-      downloadLink.classList.add("hidden");
-
-      try {
-        const res = await fetch("/api/query", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address })
-        });
-        const data = await res.json();
-
-        if (data.error) {
-          setStatus("errorPrefix", data.error);
-          return;
-        }
-
-        const transfers = data.transfers;
-        if (!transfers || transfers.length === 0) {
-          setStatus("noRecords");
-          return;
-        }
-
-        window.lastTransfers = transfers;
-
-        resultContainer.classList.remove("hidden");
-        countText.textContent = translations[currentLang].countText(transfers.length);
-        statusText.textContent = "";
-
-        renderTable(transfers);
-
-        downloadLink.href = `/download/${address}`;
-        downloadLink.textContent = translations[currentLang].download;
-        downloadLink.classList.remove("hidden");
-
-        // Update history
-        let history = getHistory();
-        if (!history.includes(address)) {
-          history.unshift(address);
-          if (history.length > 10) {
-            history.pop();
-          }
-          setHistory(history);
-          renderHistory();
-        }
-      } catch (err) {
-        setStatus("fetchErrorPrefix", err.message);
-      }
-    });
-  </script>
+<script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+<script src="{{ url_for('static', filename='js/history.js') }}"></script>
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.Serchain?.App?.init) window.Serchain.App.init();
+    else console.error('Serchain.App.init not found.');
+  });
+</script>
 </body>
 </html>
