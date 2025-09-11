@@ -40,6 +40,9 @@
       els.status.innerHTML = `<div class="status-indicator status-warning"><div class="loading-spinner"></div>${statusText}</div>`;
     } else if (key === "success") {
       els.status.innerHTML = `<div class="status-indicator status-success">${statusText}</div>`;
+      // 记录当前高度和margin，用于平滑过渡
+      els.status.style.height = els.status.offsetHeight + "px";
+      els.status.style.marginTop = "0.5rem"; // 记录mt-2的值
     } else if (key === "invalidAddress" || key === "fetchErrorPrefix") {
       els.status.innerHTML = `<div class="status-indicator status-error">${statusText}</div>`;
     } else if (key === "noRecords") {
@@ -47,6 +50,34 @@
     } else {
       els.status.innerHTML = statusText;
     }
+  }
+
+  // 状态提示渐隐函数
+  function fadeOutStatus(delay = 2000) {
+    setTimeout(() => {
+      els.status.style.transition = "opacity 0.5s ease-out, height 0.5s ease-out, margin 0.5s ease-out";
+      els.status.style.opacity = "0";
+      els.status.style.height = "0px"; // 高度过渡到0
+      els.status.style.marginTop = "0px"; // margin也过渡到0
+      setTimeout(() => {
+        els.status.innerHTML = "";
+        els.status.style.opacity = "1";
+        els.status.style.transition = "";
+        els.status.style.height = ""; // 重置高度
+        els.status.style.marginTop = ""; // 重置margin
+      }, 500);
+    }, delay);
+  }
+
+  // 查询中动画渐隐函数
+  function fadeOutQuerying() {
+    els.status.style.transition = "opacity 0.3s ease-out";
+    els.status.style.opacity = "0";
+    setTimeout(() => {
+      els.status.innerHTML = "";
+      els.status.style.opacity = "1";
+      els.status.style.transition = "";
+    }, 300);
   }
 
   function formatValue(v) {
@@ -150,9 +181,7 @@
       setStatus("noMoreData");
       els.loadMoreBtn.disabled = true;
       els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
-      setTimeout(() => {
-        els.status.innerHTML = "";
-      }, 3000);
+      fadeOutStatus(3000);
       return;
     }
     
@@ -169,9 +198,7 @@
         els.loadMoreBtn.disabled = true;
         els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
         els.loadMoreStatus.classList.add("hidden");
-        setTimeout(() => {
-          els.status.innerHTML = "";
-        }, 3000);
+        fadeOutStatus(3000);
         return; 
       }
 
@@ -228,60 +255,51 @@
   }
 
   function renderTable(transfers, address) {
-    // 添加淡出效果
-    els.tbody.style.opacity = "0.5";
-    els.tbody.style.transition = "opacity 0.2s ease";
-    
-    setTimeout(() => {
-      els.tbody.innerHTML = "";
-      const fmt = I18N().timeFormatter();
-      const me = address.toLowerCase();
+    els.tbody.innerHTML = "";
+    const fmt = I18N().timeFormatter();
+    const me = address.toLowerCase();
 
-      const frag = document.createDocumentFragment();
-      transfers.slice().reverse().forEach((tx, i) => {
-        const dirKey = (tx.to || "").toLowerCase() === me ? "in" : "out";
-        const tr = document.createElement("tr");
-        tr.className = "table-row";
-        tr.style.animationDelay = `${i * 0.05}s`; // 减少动画延迟
-        
-        // 添加方向图标
-        const directionIcon = dirKey === "in" ? "📥" : "📤";
-        const directionClass = dirKey === "in" ? "direction-in" : "direction-out";
-        
-        // 计算序号
-        const totalIndex = i + 1;
+    const frag = document.createDocumentFragment();
+    transfers.slice().reverse().forEach((tx, i) => {
+      const dirKey = (tx.to || "").toLowerCase() === me ? "in" : "out";
+      const tr = document.createElement("tr");
+      tr.className = "table-row";
+      tr.style.animationDelay = `${i * 0.05}s`; // 减少动画延迟
       
-      tr.innerHTML = `
-        <td class="px-4 py-2 text-center font-mono text-sm text-gray-400">${totalIndex}</td>
-        <td class="px-4 py-2 text-center hash-mono text-sm">${fmt.format(new Date(tx.time))}</td>
-        <td class="px-4 py-2 text-center ${directionClass} font-medium">
-          <span class="inline-flex items-center gap-1">
-            ${directionIcon} ${I18N().dirLabel(dirKey)}
-          </span>
-        </td>
-        <td class="px-4 py-2 whitespace-nowrap hash-mono text-xs">
-          <span class="bg-gray-800 px-2 py-1 rounded text-gray-300 table-cell-address cursor-pointer hover:bg-gray-700 transition-colors" 
-                title="点击复制地址: ${tx.from}" 
-                onclick="copyToClipboard('${tx.from}')">${tx.from}</span>
-        </td>
-        <td class="px-4 py-2 whitespace-nowrap hash-mono text-xs">
-          <span class="bg-gray-800 px-2 py-1 rounded text-gray-300 table-cell-address cursor-pointer hover:bg-gray-700 transition-colors" 
-                title="点击复制地址: ${tx.to}" 
-                onclick="copyToClipboard('${tx.to}')">${tx.to}</span>
-        </td>
-        <td class="px-4 py-2 text-right font-mono font-semibold">${formatValue(tx.value)}</td>
-        <td class="px-4 py-2 text-center">
-          <span class="bg-blue-900/30 text-blue-300 px-2 py-1 rounded text-xs font-medium">${tx.asset}</span>
-        </td>
-        <td class="px-4 py-2 text-right font-mono text-sm text-gray-400">${tx.gas_fee || "-"}</td>
-      `;
-        frag.appendChild(tr);
-      });
-      els.tbody.appendChild(frag);
+      // 添加方向图标
+      const directionIcon = dirKey === "in" ? "📥" : "📤";
+      const directionClass = dirKey === "in" ? "direction-in" : "direction-out";
       
-      // 恢复透明度
-      els.tbody.style.opacity = "1";
-    }, 200);
+      // 计算序号
+      const totalIndex = i + 1;
+    
+    tr.innerHTML = `
+      <td class="px-4 py-2 text-center font-mono text-sm text-gray-400">${totalIndex}</td>
+      <td class="px-4 py-2 text-center hash-mono text-sm">${fmt.format(new Date(tx.time))}</td>
+      <td class="px-4 py-2 text-center ${directionClass} font-medium">
+        <span class="inline-flex items-center gap-1">
+          ${directionIcon} ${I18N().dirLabel(dirKey)}
+        </span>
+      </td>
+      <td class="px-4 py-2 whitespace-nowrap hash-mono text-xs">
+        <span class="bg-gray-800 px-2 py-1 rounded text-gray-300 table-cell-address cursor-pointer hover:bg-gray-700 transition-colors" 
+              title="点击复制地址: ${tx.from}" 
+              onclick="copyToClipboard('${tx.from}')">${tx.from}</span>
+      </td>
+      <td class="px-4 py-2 whitespace-nowrap hash-mono text-xs">
+        <span class="bg-gray-800 px-2 py-1 rounded text-gray-300 table-cell-address cursor-pointer hover:bg-gray-700 transition-colors" 
+              title="点击复制地址: ${tx.to}" 
+              onclick="copyToClipboard('${tx.to}')">${tx.to}</span>
+      </td>
+      <td class="px-4 py-2 text-right font-mono font-semibold">${formatValue(tx.value)}</td>
+      <td class="px-4 py-2 text-center">
+        <span class="bg-blue-900/30 text-blue-300 px-2 py-1 rounded text-xs font-medium">${tx.asset}</span>
+      </td>
+      <td class="px-4 py-2 text-right font-mono text-sm text-gray-400">${tx.gas_fee || "-"}</td>
+    `;
+      frag.appendChild(tr);
+    });
+    els.tbody.appendChild(frag);
   }
 
   async function onSearch() {
@@ -300,41 +318,58 @@
     try {
       // 初始查询10条数据
       const result = await API().fetchTransfers(addr, currentCount, pageKey);
-      if (!result.transfers.length) { setStatus("noRecords"); return; }
+      if (!result.transfers.length) { 
+        fadeOutQuerying();
+        setTimeout(() => {
+          setStatus("noRecords");
+        }, 300);
+        return; 
+      }
 
       allTransfers = result.transfers;
       pageKey = result.pageKey; // 保存下一页的 pageKey
       
-      els.result.classList.remove("hidden");
-      els.count.textContent = I18N().DICT[I18N().getLang()].countText(allTransfers.length);
+      // 先渐隐查询中动画
+      fadeOutQuerying();
       
-      // 显示成功状态
-      setStatus("success", allTransfers.length);
+      // 延迟显示结果，让查询中动画先消失
       setTimeout(() => {
-        els.status.innerHTML = "";
-      }, 2000);
+        // 显示结果容器
+        els.result.classList.remove("hidden");
+        els.count.textContent = I18N().DICT[I18N().getLang()].countText(allTransfers.length);
+        
+        // 渲染所有数据
+        renderTable(allTransfers, addr);
 
-      // 渲染所有数据
-      renderTable(allTransfers, addr);
-
-      els.download.textContent = I18N().DICT[I18N().getLang()].download;
-      els.download.classList.remove("hidden");
-      els.loadMoreBtn.classList.remove("hidden");
-      
-      // 重置查询更多按钮状态
-      if (pageKey) {
-        els.loadMoreBtn.disabled = false;
-        els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].loadMoreBtn;
-      } else {
-        // 如果没有 pageKey，说明数据不足10条或已查完
-        els.loadMoreBtn.disabled = true;
-        els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
-      }
+        els.download.textContent = I18N().DICT[I18N().getLang()].download;
+        els.download.classList.remove("hidden");
+        els.loadMoreBtn.classList.remove("hidden");
+        
+        // 显示成功状态
+        setStatus("success", allTransfers.length);
+        fadeOutStatus(2000);
+        
+        // 重置查询更多按钮状态
+        if (pageKey) {
+          els.loadMoreBtn.disabled = false;
+          els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].loadMoreBtn;
+        } else {
+          // 如果没有 pageKey，说明数据不足10条或已查完
+          els.loadMoreBtn.disabled = true;
+          els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
+        }
+      }, 300); // 等待查询中动画消失
 
       History().add(addr);
       History().render("historyContainer", (a) => { els.input.value = a; onSearch(); });
     } catch (e) {
-      setStatus("fetchErrorPrefix", e.message || String(e));
+      // 先渐隐查询中动画
+      fadeOutQuerying();
+      
+      // 延迟显示错误信息
+      setTimeout(() => {
+        setStatus("fetchErrorPrefix", e.message || String(e));
+      }, 300);
     }
   }
 
