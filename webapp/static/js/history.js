@@ -8,7 +8,7 @@
     const list = get();
     if (!list.includes(addr)) {
       list.unshift(addr);
-      if (list.length > 20) list.pop();
+      if (list.length > 5) list.pop();
       set(list);
     }
   };
@@ -30,8 +30,8 @@
 
     const label = document.createElement("div");
     label.id = "historyLabel";
-    label.textContent = d.historyLabel;
-    label.className = "text-sm text-gray-300 flex items-center";
+    label.innerHTML = `🕒 ${d.historyLabel}`;
+    label.className = "text-sm text-gray-300 font-medium flex items-center";
     el.appendChild(label);
 
     list.forEach((addr) => {
@@ -57,7 +57,7 @@
     const clearBtn = document.createElement("button");
     clearBtn.id = "clearHistoryBtn";
     clearBtn.textContent = d.clearHistory;
-    clearBtn.className = "text-sm text-gray-400 hover:text-red-500 cursor-pointer ml-4";
+    clearBtn.className = "text-sm text-gray-300 hover:text-white hover:bg-red-500/20 cursor-pointer ml-3 px-3 py-1 rounded-md border border-red-400/30 hover:border-red-400/60 transition-all duration-200 backdrop-blur-sm bg-red-500/10 hover:bg-red-500/20 font-medium";
     clearBtn.onclick = () => { clear(); render(containerId, onSelect); };
     el.appendChild(clearBtn);
   }
