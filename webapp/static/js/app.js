@@ -317,7 +317,6 @@
       // 渲染所有数据
       renderTable(allTransfers, addr);
 
-      els.download.href = API().csvUrl(addr);
       els.download.textContent = I18N().DICT[I18N().getLang()].download;
       els.download.classList.remove("hidden");
       els.loadMoreBtn.classList.remove("hidden");
@@ -356,6 +355,19 @@
     
     // 查询更多按钮事件
     els.loadMoreBtn.addEventListener("click", loadMoreData);
+    
+    // 下载按钮事件
+    els.download.addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (allTransfers && currentAddress) {
+        try {
+          await API().downloadCSV(currentAddress, allTransfers);
+        } catch (error) {
+          console.error('Download failed:', error);
+          setStatus("fetchErrorPrefix", "Download failed");
+        }
+      }
+    });
   }
 
   function updateLangButtons() {

@@ -18,7 +18,6 @@ def format_timestamp(iso_str):
 # 将项目根目录加入模块路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from serchain import get_asset_transfers  # 复用已有逻辑
-from serchain import get_gas_fee
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 
@@ -40,46 +39,51 @@ def index():
 
     return render_template("index.html", address=address, transfers=transfers)
 
-@app.route("/download")
+@app.route("/download", methods=["POST"])
 def download_csv():
-    address = request.args.get("address", "").strip()
-    if not address.startswith("0x") or len(address) != 42:
-        return "Invalid address", 400
+    try:
+        data = request.get_json()
+        address = data.get("address", "").strip()
+        transfers_data = data.get("transfers", [])
+        
+        if not address.startswith("0x") or len(address) != 42:
+            return "Invalid address", 400
 
-    result = get_asset_transfers(address, 50)
-    transfers = result["transfers"]
-    if not transfers:
-        return "No data found", 404
+        if not transfers_data:
+            return "No data found", 404
 
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Direction", "Time", "From", "To", "Value", "Asset", "Gas Fee (ETH)", "TxHash"])
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Direction", "Time", "From", "To", "Value", "Asset", "Gas Fee (ETH)", "TxHash"])
 
-    for tx in transfers:
-        _from = tx['from']
-        _to = tx['to']
-        direction = "Received" if _to.lower() == address.lower() else "Sent"
-        gas_fee = get_gas_fee(tx['hash'])
-        ts = format_timestamp(tx['metadata']['blockTimestamp'])
-        writer.writerow([
-            direction,
-            ts,
-            _from,
-            _to,
-            tx['value'],
-            tx['asset'],
-            gas_fee,
-            tx['hash']
-        ])
+        for tx in transfers_data:
+            _from = tx['from']
+            _to = tx['to']
+            direction = "Received" if _to.lower() == address.lower() else "Sent"
+            gas_fee = tx.get('gas_fee', 'N/A')
+            ts = tx['time']  # 使用前端已经格式化的时间
+            writer.writerow([
+                direction,
+                ts,
+                _from,
+                _to,
+                tx['value'],
+                tx['asset'],
+                gas_fee,
+                tx['hash']
+            ])
 
-    output.seek(0)
-    filename = f"transfers_{address[:6]}.csv"
-    return send_file(
-        io.BytesIO(output.getvalue().encode()),
-        mimetype="text/csv",
-        as_attachment=True,
-        download_name=filename
-    )
+        output.seek(0)
+        filename = f"transfers_{address[:6]}.csv"
+        return send_file(
+            io.BytesIO(output.getvalue().encode()),
+            mimetype="text/csv",
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        print(f"Error in download_csv: {e}")
+        return f"Error: {str(e)}", 500
 
 @app.route("/api/query", methods=["POST"])
 def api_query():
