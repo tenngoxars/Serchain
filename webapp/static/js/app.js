@@ -44,13 +44,13 @@
       const dirKey = (tx.to || "").toLowerCase() === me ? "in" : "out";
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td class="px-4 py-2">${i + 1}</td>
-        <td class="px-4 py-2">${fmt.format(new Date(tx.time))}</td>
-        <td class="px-4 py-2">${I18N().dirLabel(dirKey)}</td>
-        <td class="px-4 py-2 whitespace-nowrap">${tx.from}</td>
-        <td class="px-4 py-2 whitespace-nowrap">${tx.to}</td>
+        <td class="px-4 py-2 text-center">${i + 1}</td>
+        <td class="px-4 py-2 text-center hash-mono">${fmt.format(new Date(tx.time))}</td>
+        <td class="px-4 py-2 text-center ${dirKey === "in" ? "direction-in" : "direction-out"}">${I18N().dirLabel(dirKey)}</td>
+        <td class="px-4 py-2 whitespace-nowrap hash-mono">${tx.from}</td>
+        <td class="px-4 py-2 whitespace-nowrap hash-mono">${tx.to}</td>
         <td class="px-4 py-2 text-right">${formatValue(tx.value)}</td>
-        <td class="px-4 py-2">${tx.asset}</td>
+        <td class="px-4 py-2 text-center">${tx.asset}</td>
         <td class="px-4 py-2 text-right">${tx.gas_fee || "-"}</td>
       `;
       frag.appendChild(tr);

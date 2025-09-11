@@ -35,23 +35,22 @@
     el.appendChild(label);
 
     list.forEach((addr) => {
-      const wrap = document.createElement("div");
-      wrap.className = "flex items-center";
-
-      const btn = document.createElement("button");
-      btn.textContent = addr.slice(0, 6) + "..." + addr.slice(-4);
-      btn.title = addr;
-      btn.className = "px-2 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 border border-zinc-600";
-      btn.onclick = () => onSelect?.(addr);
-
-      const del = document.createElement("button");
-      del.innerHTML = '<span aria-label="Delete" role="img">❌</span>';
-      del.className = "ml-1 text-gray-400 hover:text-red-500 cursor-pointer";
-      del.title = "Delete";
-      del.onclick = () => { remove(addr); render(containerId, onSelect); };
-
-      wrap.appendChild(btn);
-      wrap.appendChild(del);
+      const wrap = document.createElement("span");
+      wrap.className = "history-item cursor-pointer";
+      wrap.title = addr;
+      wrap.innerHTML = `
+        ${addr.slice(0, 6)}...${addr.slice(-4)}
+        <span class="history-close" title="Delete" style="font-size: 1.5rem;">×</span>
+      `;
+      wrap.querySelector(".history-close").onclick = () => {
+        remove(addr);
+        render(containerId, onSelect);
+      };
+      wrap.onclick = (e) => {
+        if (!e.target.classList.contains("history-close")) {
+          onSelect?.(addr);
+        }
+      };
       el.appendChild(wrap);
     });
 
