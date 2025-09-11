@@ -8,7 +8,7 @@
     const list = get();
     if (!list.includes(addr)) {
       list.unshift(addr);
-      if (list.length > 10) list.pop();
+      if (list.length > 20) list.pop();
       set(list);
     }
   };

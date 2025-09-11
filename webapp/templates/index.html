@@ -465,6 +465,39 @@
       }
     }
 
+    /* 分页按钮样式 */
+    .pagination-btn {
+      background: linear-gradient(135deg, #c846c2 0%, #7a2ea0 50%, #5b21b6 100%);
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(200, 70, 194, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(200, 70, 194, 0.4);
+    }
+
+    .pagination-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .pagination-btn:disabled {
+      background: rgba(107, 114, 128, 0.5);
+      color: rgba(156, 163, 175, 0.8);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
     /* 减少动画模式支持 */
     @media (prefers-reduced-motion: reduce) {
       .table-row {
@@ -522,6 +555,17 @@
           </thead>
           <tbody id="resultsTableBody" class="divide-y divide-zinc-700"></tbody>
         </table>
+      </div>
+
+      <!-- 分页组件 -->
+      <div id="paginationContainer" class="hidden mt-4 flex justify-center items-center gap-2">
+        <button id="prevPage" class="pagination-btn">
+          <span id="prevText">← 上一页</span>
+        </button>
+        <span id="pageInfo" class="px-3 py-1 text-sm text-gray-300"></span>
+        <button id="nextPage" class="pagination-btn">
+          <span id="nextText">下一页 →</span>
+        </button>
       </div>
 
       <div class="mt-4 text-center">

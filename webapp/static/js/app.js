@@ -6,6 +6,8 @@
 
   let els = {};
   let lastTransfers = null;
+  let currentPage = 1;
+  const itemsPerPage = 10;
 
   function cacheDom() {
     els = {
@@ -19,6 +21,10 @@
       langZh: document.getElementById("langZh"),
       langEn: document.getElementById("langEn"),
       history: document.getElementById("historyContainer"),
+      pagination: document.getElementById("paginationContainer"),
+      prevPage: document.getElementById("prevPage"),
+      nextPage: document.getElementById("nextPage"),
+      pageInfo: document.getElementById("pageInfo"),
     };
   }
 
@@ -134,13 +140,51 @@
     }, 2000);
   }
 
+  // 分页相关函数
+  function getTotalPages(transfers) {
+    return Math.ceil(transfers.length / itemsPerPage);
+  }
+
+  function getCurrentPageData(transfers, page) {
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return transfers.slice(startIndex, endIndex);
+  }
+
+  function updatePagination(transfers) {
+    const totalPages = getTotalPages(transfers);
+    
+    if (totalPages <= 1) {
+      els.pagination.classList.add("hidden");
+      return;
+    }
+    
+    els.pagination.classList.remove("hidden");
+    els.prevPage.disabled = currentPage === 1;
+    els.nextPage.disabled = currentPage === totalPages;
+    
+    const d = I18N().DICT[I18N().getLang()];
+    const pageText = d.pageInfo || "第 {current} 页，共 {total} 页";
+    els.pageInfo.textContent = pageText
+      .replace("{current}", currentPage)
+      .replace("{total}", totalPages);
+    
+    // 更新按钮文本
+    els.prevPage.querySelector('#prevText').textContent = d.prevPage || "← 上一页";
+    els.nextPage.querySelector('#nextText').textContent = d.nextPage || "下一页 →";
+  }
+
   function renderTable(transfers, address) {
     els.tbody.innerHTML = "";
     const fmt = I18N().timeFormatter();
     const me = address.toLowerCase();
 
+    // 获取当前页数据
+    const pageData = getCurrentPageData(transfers, currentPage);
+    updatePagination(transfers);
+
     const frag = document.createDocumentFragment();
-    transfers.slice().reverse().forEach((tx, i) => {
+    pageData.slice().reverse().forEach((tx, i) => {
       const dirKey = (tx.to || "").toLowerCase() === me ? "in" : "out";
       const tr = document.createElement("tr");
       tr.className = "table-row";
@@ -150,8 +194,11 @@
       const directionIcon = dirKey === "in" ? "📥" : "📤";
       const directionClass = dirKey === "in" ? "direction-in" : "direction-out";
       
+      // 计算总序号
+      const totalIndex = (currentPage - 1) * itemsPerPage + i + 1;
+      
       tr.innerHTML = `
-        <td class="px-4 py-2 text-center font-mono text-sm text-gray-400">${i + 1}</td>
+        <td class="px-4 py-2 text-center font-mono text-sm text-gray-400">${totalIndex}</td>
         <td class="px-4 py-2 text-center hash-mono text-sm">${fmt.format(new Date(tx.time))}</td>
         <td class="px-4 py-2 text-center ${directionClass} font-medium">
           <span class="inline-flex items-center gap-1">
@@ -186,6 +233,8 @@
     setStatus("querying");
     els.count.textContent = "";
     els.download.classList.add("hidden");
+    els.pagination.classList.add("hidden");
+    currentPage = 1; // 重置到第一页
 
     try {
       const transfers = await API().fetchTransfers(addr);
@@ -227,6 +276,26 @@
     els.langEn.addEventListener("click", () => {
       I18N().setLang("en");
       updateLangButtons();
+    });
+    
+    // 分页按钮事件
+    els.prevPage.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage--;
+        if (lastTransfers && els.input.value) {
+          renderTable(lastTransfers, els.input.value);
+        }
+      }
+    });
+    
+    els.nextPage.addEventListener("click", () => {
+      const totalPages = getTotalPages(lastTransfers || []);
+      if (currentPage < totalPages) {
+        currentPage++;
+        if (lastTransfers && els.input.value) {
+          renderTable(lastTransfers, els.input.value);
+        }
+      }
     });
   }
 

@@ -23,7 +23,7 @@
 
 ## ✨ Key Features
 
-- 🔍 **Real-time Transfer Tracking** - Query any Ethereum address to view recent transfers
+- 🔍 **Real-time Transfer Tracking** - Query any Ethereum address to view up to 50 recent transfers
 - 📊 **Comprehensive Data** - View transaction time, direction, addresses, value, asset type, and gas fees
 - 📥 **One-Click CSV Export** - Download transfer data for local analysis and archiving
 - 🌐 **Dual Interface** - Modern web UI and powerful CLI for different use cases

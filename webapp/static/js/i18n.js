@@ -23,6 +23,9 @@
       direction: { in: "转入", out: "转出" },
       copySuccess: "✅ 地址已复制到剪贴板",
       copyError: "❌ 复制失败，请手动复制",
+      pageInfo: "第 {current} 页，共 {total} 页",
+      prevPage: "← 上一页",
+      nextPage: "下一页 →",
       locale: "zh-CN"
     },
     en: {
@@ -47,6 +50,9 @@
       direction: { in: "Received", out: "Sent" },
       copySuccess: "✅ Address copied to clipboard",
       copyError: "❌ Copy failed, please copy manually",
+      pageInfo: "Page {current} of {total}",
+      prevPage: "← Previous",
+      nextPage: "Next →",
       locale: "en-US"
     }
   };

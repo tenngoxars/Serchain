@@ -42,7 +42,7 @@ def get_asset_transfers(address):
             "toBlock": "latest",
             "toAddress": address,
             "category": ["external", "internal", "erc20"],
-            "maxCount": "0xa",
+            "maxCount": "0x14",
             "withMetadata": True
         }]
     }
