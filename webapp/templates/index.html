@@ -396,6 +396,15 @@
         word-break: break-all;
       }
       
+      /* 移动端地址显示优化 */
+      .table-cell-address {
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+      }
+      
       .btn {
         padding: 0.625rem 1.25rem;
         font-size: 0.8125rem;

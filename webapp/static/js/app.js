@@ -49,6 +49,91 @@
     return num.toLocaleString("en-US", { useGrouping: false, maximumFractionDigits: 18 });
   }
 
+  // 复制到剪贴板功能
+  function copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      // 使用现代 Clipboard API
+      navigator.clipboard.writeText(text).then(() => {
+        showCopySuccess();
+      }).catch(() => {
+        fallbackCopyTextToClipboard(text);
+      });
+    } else {
+      // 降级到传统方法
+      fallbackCopyTextToClipboard(text);
+    }
+  }
+
+  // 降级复制方法
+  function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      document.execCommand('copy');
+      showCopySuccess();
+    } catch (err) {
+      console.error('复制失败:', err);
+      showCopyError();
+    }
+    
+    document.body.removeChild(textArea);
+  }
+
+  // 显示复制成功提示
+  function showCopySuccess() {
+    const d = I18N().DICT[I18N().getLang()];
+    const message = d.copySuccess || "✅ 地址已复制到剪贴板";
+    
+    // 创建临时提示元素
+    const toast = document.createElement('div');
+    toast.className = 'fixed bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
+    toast.style.top = '16px';
+    toast.style.left = '16px';
+    toast.style.position = 'fixed';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // 2秒后移除提示
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, 300);
+    }, 2000);
+  }
+
+  // 显示复制失败提示
+  function showCopyError() {
+    const d = I18N().DICT[I18N().getLang()];
+    const message = d.copyError || "❌ 复制失败，请手动复制";
+    
+    const toast = document.createElement('div');
+    toast.className = 'fixed bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
+    toast.style.top = '16px';
+    toast.style.left = '16px';
+    toast.style.position = 'fixed';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, 300);
+    }, 2000);
+  }
+
   function renderTable(transfers, address) {
     els.tbody.innerHTML = "";
     const fmt = I18N().timeFormatter();
@@ -74,10 +159,14 @@
           </span>
         </td>
         <td class="px-4 py-2 whitespace-nowrap hash-mono text-xs">
-          <span class="bg-gray-800 px-2 py-1 rounded text-gray-300">${tx.from}</span>
+          <span class="bg-gray-800 px-2 py-1 rounded text-gray-300 table-cell-address cursor-pointer hover:bg-gray-700 transition-colors" 
+                title="点击复制地址: ${tx.from}" 
+                onclick="copyToClipboard('${tx.from}')">${tx.from}</span>
         </td>
         <td class="px-4 py-2 whitespace-nowrap hash-mono text-xs">
-          <span class="bg-gray-800 px-2 py-1 rounded text-gray-300">${tx.to}</span>
+          <span class="bg-gray-800 px-2 py-1 rounded text-gray-300 table-cell-address cursor-pointer hover:bg-gray-700 transition-colors" 
+                title="点击复制地址: ${tx.to}" 
+                onclick="copyToClipboard('${tx.to}')">${tx.to}</span>
         </td>
         <td class="px-4 py-2 text-right font-mono font-semibold">${formatValue(tx.value)}</td>
         <td class="px-4 py-2 text-center">
@@ -184,4 +273,7 @@
 
   root.Serchain = root.Serchain || {};
   root.Serchain.App = { init, rerenderOnLang };
+  
+  // 暴露复制功能到全局作用域
+  root.copyToClipboard = copyToClipboard;
 })(window);
