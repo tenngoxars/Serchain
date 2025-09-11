@@ -24,7 +24,21 @@
   function setStatus(key, extra = "") {
     const d = I18N().DICT[I18N().getLang()];
     const v = d[key];
-    els.status.textContent = typeof v === "function" ? v(extra) : (v ?? "") + (extra ?? "");
+    const statusText = typeof v === "function" ? v(extra) : (v ?? "") + (extra ?? "");
+    
+    // 添加状态指示器样式
+    els.status.className = "text-sm text-center mt-2";
+    if (key === "querying") {
+      els.status.innerHTML = `<div class="status-indicator status-warning"><div class="loading-spinner"></div>${statusText}</div>`;
+    } else if (key === "success") {
+      els.status.innerHTML = `<div class="status-indicator status-success">${statusText}</div>`;
+    } else if (key === "invalidAddress" || key === "fetchErrorPrefix") {
+      els.status.innerHTML = `<div class="status-indicator status-error">${statusText}</div>`;
+    } else if (key === "noRecords") {
+      els.status.innerHTML = `<div class="status-indicator status-warning">${statusText}</div>`;
+    } else {
+      els.status.innerHTML = statusText;
+    }
   }
 
   function formatValue(v) {
@@ -43,15 +57,32 @@
     transfers.slice().reverse().forEach((tx, i) => {
       const dirKey = (tx.to || "").toLowerCase() === me ? "in" : "out";
       const tr = document.createElement("tr");
+      tr.className = "table-row";
+      tr.style.animationDelay = `${i * 0.1}s`;
+      
+      // 添加方向图标
+      const directionIcon = dirKey === "in" ? "📥" : "📤";
+      const directionClass = dirKey === "in" ? "direction-in" : "direction-out";
+      
       tr.innerHTML = `
-        <td class="px-4 py-2 text-center">${i + 1}</td>
-        <td class="px-4 py-2 text-center hash-mono">${fmt.format(new Date(tx.time))}</td>
-        <td class="px-4 py-2 text-center ${dirKey === "in" ? "direction-in" : "direction-out"}">${I18N().dirLabel(dirKey)}</td>
-        <td class="px-4 py-2 whitespace-nowrap hash-mono">${tx.from}</td>
-        <td class="px-4 py-2 whitespace-nowrap hash-mono">${tx.to}</td>
-        <td class="px-4 py-2 text-right">${formatValue(tx.value)}</td>
-        <td class="px-4 py-2 text-center">${tx.asset}</td>
-        <td class="px-4 py-2 text-right">${tx.gas_fee || "-"}</td>
+        <td class="px-4 py-2 text-center font-mono text-sm text-gray-400">${i + 1}</td>
+        <td class="px-4 py-2 text-center hash-mono text-sm">${fmt.format(new Date(tx.time))}</td>
+        <td class="px-4 py-2 text-center ${directionClass} font-medium">
+          <span class="inline-flex items-center gap-1">
+            ${directionIcon} ${I18N().dirLabel(dirKey)}
+          </span>
+        </td>
+        <td class="px-4 py-2 whitespace-nowrap hash-mono text-xs">
+          <span class="bg-gray-800 px-2 py-1 rounded text-gray-300">${tx.from}</span>
+        </td>
+        <td class="px-4 py-2 whitespace-nowrap hash-mono text-xs">
+          <span class="bg-gray-800 px-2 py-1 rounded text-gray-300">${tx.to}</span>
+        </td>
+        <td class="px-4 py-2 text-right font-mono font-semibold">${formatValue(tx.value)}</td>
+        <td class="px-4 py-2 text-center">
+          <span class="bg-blue-900/30 text-blue-300 px-2 py-1 rounded text-xs font-medium">${tx.asset}</span>
+        </td>
+        <td class="px-4 py-2 text-right font-mono text-sm text-gray-400">${tx.gas_fee || "-"}</td>
       `;
       frag.appendChild(tr);
     });
@@ -73,7 +104,12 @@
       lastTransfers = transfers;
       els.result.classList.remove("hidden");
       els.count.textContent = I18N().DICT[I18N().getLang()].countText(transfers.length);
-      els.status.textContent = "";
+      
+      // 显示成功状态
+      setStatus("success", transfers.length);
+      setTimeout(() => {
+        els.status.innerHTML = "";
+      }, 2000);
 
       renderTable(transfers, addr);
 
