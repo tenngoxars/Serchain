@@ -21,7 +21,6 @@
         asset: "资产", gasFee: "Gas 费 (ETH)"
       },
       direction: { in: "转入", out: "转出" },
-      toggleLabel: "🇨🇳 简体中文 / 🇬🇧 English",
       locale: "zh-CN"
     },
     en: {
@@ -44,7 +43,6 @@
         asset: "Asset", gasFee: "Gas Fee (ETH)"
       },
       direction: { in: "Received", out: "Sent" },
-      toggleLabel: "🇨🇳 Chinese / 🇬🇧 English",
       locale: "en-US"
     }
   };
@@ -91,7 +89,6 @@
     byId("addressInput") && (byId("addressInput").placeholder = d.addressPlaceholder);
     byId("queryBtn") && (byId("queryBtn").textContent = d.queryBtn);
     byId("downloadLink") && (byId("downloadLink").textContent = d.download);
-    byId("langToggle") && (byId("langToggle").textContent = d.toggleLabel);
 
     // 表头
     const map = {

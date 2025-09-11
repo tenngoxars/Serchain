@@ -2,7 +2,7 @@ import sys
 import os
 import io
 import csv
-from flask import Flask, render_template, request, send_file, url_for, jsonify
+from flask import Flask, render_template, request, send_file, jsonify
 from datetime import datetime
 
 # 创建应用并配置静态文件

@@ -6,7 +6,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Serchain 链上追踪器</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}?v=2">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap">
   <style>
     /* 保留必要的自定义样式 */
@@ -186,6 +186,7 @@
       text-decoration: none !important;
     }
 
+
     .btn:active {
       transform: translateY(0);
       box-shadow: 
@@ -343,9 +344,9 @@
     }
 
     .status-warning {
-      background: rgba(245, 158, 11, 0.1);
-      color: #f59e0b;
-      border: 1px solid rgba(245, 158, 11, 0.2);
+      background: rgba(200, 70, 194, 0.1);
+      color: #c846c2;
+      border: 1px solid rgba(200, 70, 194, 0.2);
     }
 
     /* 脉冲动画 */
@@ -360,12 +361,13 @@
 
     /* 标题动画 */
     .title-glow {
-      background: linear-gradient(135deg, #c846c2, #7a2ea0, #5b21b6);
+      background: linear-gradient(135deg, #ffffff, #e0e7ff, #c7d2fe);
       background-size: 200% 200%;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       animation: gradientShift 3s ease infinite;
+      text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
     }
 
     @keyframes gradientShift {
@@ -475,12 +477,12 @@
   </style>
 </head>
 <body id="vanta-bg" class="grid-noise min-h-screen flex items-center justify-center p-6 relative">
-  <div class="absolute top-4 right-4">
-    <button id="langToggle" class="text-sm text-gray-400 hover:text-white"></button>
+  <div class="absolute top-4 right-4 flex gap-3 items-stretch" style="z-index: 10000;">
+    <button id="langZh" class="lang-btn" data-lang="zh">🇨🇳 中文</button>
+    <button id="langEn" class="lang-btn" data-lang="en">🇬🇧 English</button>
   </div>
   <main class="w-full space-y-6">
-    <h1 id="title" class="text-4xl font-bold text-center title-glow mb-2"></h1>
-    <p class="text-center text-gray-400 text-sm">Track Ethereum transfers with style</p>
+    <h1 id="title" class="text-4xl font-bold text-center title-glow mb-6"></h1>
 
     <div class="w-full flex flex-col items-center space-y-2">
       <div class="w-full flex items-center justify-center gap-4">

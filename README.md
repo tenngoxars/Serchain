@@ -27,8 +27,8 @@
 - 📊 **Comprehensive Data** - View transaction time, direction, addresses, value, asset type, and gas fees
 - 📥 **One-Click CSV Export** - Download transfer data for local analysis and archiving
 - 🌐 **Dual Interface** - Modern web UI and powerful CLI for different use cases
-- 🎨 **Modern Design** - Built with Tailwind CSS featuring dark theme and responsive layout
-- 🌍 **Multi-language Support** - Available in English and Chinese
+- 🎨 **Modern Design** - Built with Tailwind CSS featuring dark theme, responsive layout, and interactive animations
+- 🌍 **Multi-language Support** - Available in English and Chinese with seamless language switching
 - 📱 **Mobile Friendly** - Fully responsive design that works on all devices
 - 🔒 **No Authentication Required** - No wallet connection or user login needed
 - ⚡ **Fast & Reliable** - Powered by Alchemy API for accurate, up-to-date data
@@ -118,12 +118,12 @@ Serchain/
 3. **Enter an Ethereum address** in the input field (must start with `0x` and be 42 characters long)
 
 4. **View results** in the beautiful table interface with:
-   - Transaction direction (Incoming/Outgoing)
-   - Timestamp
-   - From/To addresses
+   - Transaction direction (Incoming/Outgoing) with visual indicators
+   - Timestamp with proper formatting
+   - From/To addresses with copy-friendly display
    - Value and asset type
    - Gas fees
-   - Transaction hash
+   - Animated table rows with smooth transitions
 
 5. **Export data** by clicking the download button to get a CSV file
 
@@ -191,9 +191,11 @@ Enter an Ethereum address (0x...): 0x1234567890abcdef1234567890abcdef12345678
 The web interface displays the same data in a beautiful, sortable table with:
 - Real-time search and filtering
 - Responsive design for mobile devices
-- Dark theme with modern styling
+- Dark theme with modern styling and interactive animations
 - One-click CSV export
 - Query history tracking
+- Dynamic background effects and smooth transitions
+- Language switching with persistent preferences
 
 ## 🚀 Deployment
 

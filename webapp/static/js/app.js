@@ -16,7 +16,8 @@
       tbody: document.getElementById("resultsTableBody"),
       count: document.getElementById("countText"),
       download: document.getElementById("downloadLink"),
-      langToggle: document.getElementById("langToggle"),
+      langZh: document.getElementById("langZh"),
+      langEn: document.getElementById("langEn"),
       history: document.getElementById("historyContainer"),
     };
   }
@@ -127,12 +128,23 @@
   function initEvents() {
     els.btn.addEventListener("click", onSearch);
     els.input.addEventListener("keydown", (e) => { if (e.key === "Enter") onSearch(); });
-    els.langToggle.addEventListener("click", () => {
-      const next = I18N().getLang() === "zh" ? "en" : "zh";
-      I18N().setLang(next);
-      // 历史区在切换语言后也要刷新
-      History().render("historyContainer", (a) => { els.input.value = a; onSearch(); });
+    
+    // 语言切换按钮事件
+    els.langZh.addEventListener("click", () => {
+      I18N().setLang("zh");
+      updateLangButtons();
     });
+    
+    els.langEn.addEventListener("click", () => {
+      I18N().setLang("en");
+      updateLangButtons();
+    });
+  }
+
+  function updateLangButtons() {
+    const currentLang = I18N().getLang();
+    els.langZh.classList.toggle("active", currentLang === "zh");
+    els.langEn.classList.toggle("active", currentLang === "en");
   }
 
   function initVanta() {
@@ -153,6 +165,7 @@
   function init() {
     cacheDom();
     I18N().applyStatic();
+    updateLangButtons(); // 设置初始按钮状态
     History().render("historyContainer", (a) => { els.input.value = a; onSearch(); });
     initEvents();
     initVanta();
@@ -160,6 +173,7 @@
 
   function rerenderOnLang() {
     I18N().applyStatic();
+    updateLangButtons(); // 更新语言按钮状态
     History().render("historyContainer", (a) => { els.input.value = a; onSearch(); });
     if (lastTransfers && els.input.value) {
       renderTable(lastTransfers, els.input.value);
