@@ -33,7 +33,8 @@ def index():
     if request.method == "POST":
         address = request.form.get("address", "").strip()
         if address.startswith("0x") and len(address) == 42:
-            transfers = get_asset_transfers(address)
+            result = get_asset_transfers(address, 50)
+            transfers = result["transfers"]
             for tx in transfers:
                 tx['metadata']['blockTimestamp'] = format_timestamp(tx['metadata']['blockTimestamp'])
 
@@ -45,7 +46,8 @@ def download_csv():
     if not address.startswith("0x") or len(address) != 42:
         return "Invalid address", 400
 
-    transfers = get_asset_transfers(address)
+    result = get_asset_transfers(address, 50)
+    transfers = result["transfers"]
     if not transfers:
         return "No data found", 404
 
@@ -83,12 +85,19 @@ def download_csv():
 def api_query():
     data = request.get_json()
     address = data.get("address")
+    max_count = data.get("maxCount", 50)
+    page_key = data.get("pageKey")
 
     if not address or not address.startswith("0x") or len(address) != 42:
         return jsonify({"error": "Invalid Ethereum address"}), 400
 
     try:
-        transfers = get_asset_transfers(address)
+        # 获取指定数量的数据
+        result = get_asset_transfers(address, max_count, page_key)
+        transfers = result["transfers"]
+        next_page_key = result.get("pageKey")
+        
+        # 处理所有数据
         results = []
         for tx in transfers:
             results.append({
@@ -100,7 +109,15 @@ def api_query():
                 "gas_fee": tx.get('gas_fee'),
                 "hash": tx['hash']
             })
-        return jsonify({"transfers": results}), 200
+        
+        return jsonify({
+            "transfers": results,
+            "pagination": {
+                "total": len(results),
+                "maxCount": max_count
+            },
+            "pageKey": next_page_key
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     

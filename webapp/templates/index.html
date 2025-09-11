@@ -307,6 +307,12 @@
     /* 表格行动画 */
     .table-row {
       animation: slideInUp 0.3s ease-out;
+      transition: all 0.2s ease;
+    }
+    
+    .table-row:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateX(4px);
     }
 
     @keyframes slideInUp {
@@ -475,24 +481,34 @@
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 2px 8px rgba(200, 70, 194, 0.3);
       position: relative;
       overflow: hidden;
+      transform: scale(1);
     }
 
     .pagination-btn:hover:not(:disabled) {
-      transform: translateY(-2px);
+      transform: translateY(-2px) scale(1.05);
       box-shadow: 0 4px 14px rgba(200, 70, 194, 0.4);
     }
 
     .pagination-btn:active:not(:disabled) {
-      transform: translateY(0);
+      transform: translateY(0) scale(0.95);
     }
 
     .pagination-btn:disabled {
       background: rgba(107, 114, 128, 0.5);
       color: rgba(156, 163, 175, 0.8);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* 查询更多按钮禁用状态 */
+    .btn:disabled {
+      background: rgba(34, 197, 94, 0.3);
+      color: rgba(34, 197, 94, 0.7);
       cursor: not-allowed;
       transform: none;
       box-shadow: none;
@@ -538,7 +554,7 @@
     <div id="status" class="text-sm text-gray-300 text-center mt-2"></div>
 
     <div id="resultContainer" class="hidden card">
-      <p id="countText" class="text-sm text-gray-400 mb-2"></p>
+      <p id="countText" class="text-sm text-gray-400 mb-4"></p>
       <div class="overflow-x-auto rounded-md border border-zinc-700 w-full">
         <table class="min-w-full text-sm text-left text-white whitespace-nowrap">
           <thead class="bg-white/10 text-gray-400">
@@ -557,19 +573,17 @@
         </table>
       </div>
 
-      <!-- 分页组件 -->
-      <div id="paginationContainer" class="hidden mt-4 flex justify-center items-center gap-2">
-        <button id="prevPage" class="pagination-btn">
-          <span id="prevText">← 上一页</span>
-        </button>
-        <span id="pageInfo" class="px-3 py-1 text-sm text-gray-300"></span>
-        <button id="nextPage" class="pagination-btn">
-          <span id="nextText">下一页 →</span>
-        </button>
-      </div>
-
-      <div class="mt-4 text-center">
+      <div class="mt-4 text-center flex justify-center gap-3">
         <a id="downloadLink" href="#" class="btn text-sm hidden">下载 CSV</a>
+        <button id="loadMoreBtn" class="btn text-sm hidden">查询更多</button>
+      </div>
+      
+      <!-- 查询更多时的状态提示 -->
+      <div id="loadMoreStatus" class="hidden text-center mt-4">
+        <div class="inline-flex items-center gap-2 text-sm text-gray-300">
+          <div class="loading-spinner w-4 h-4"></div>
+          <span id="loadMoreStatusText">正在查询更多数据...</span>
+        </div>
       </div>
     </div>
   </main>

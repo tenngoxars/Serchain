@@ -5,9 +5,11 @@
   const History = () => root.Serchain.History;
 
   let els = {};
-  let lastTransfers = null;
-  let currentPage = 1;
-  const itemsPerPage = 10;
+  let allTransfers = null; // 存储所有数据
+  let currentAddress = "";
+  let currentCount = 10; // 当前查询的数据量
+  let pageKey = null; // Alchemy 分页的 pageKey
+  const incrementCount = 10; // 每次增加的条数
 
   function cacheDom() {
     els = {
@@ -21,10 +23,9 @@
       langZh: document.getElementById("langZh"),
       langEn: document.getElementById("langEn"),
       history: document.getElementById("historyContainer"),
-      pagination: document.getElementById("paginationContainer"),
-      prevPage: document.getElementById("prevPage"),
-      nextPage: document.getElementById("nextPage"),
-      pageInfo: document.getElementById("pageInfo"),
+      loadMoreBtn: document.getElementById("loadMoreBtn"),
+      loadMoreStatus: document.getElementById("loadMoreStatus"),
+      loadMoreStatusText: document.getElementById("loadMoreStatusText")
     };
   }
 
@@ -140,62 +141,115 @@
     }, 2000);
   }
 
-  // 分页相关函数
-  function getTotalPages(transfers) {
-    return Math.ceil(transfers.length / itemsPerPage);
-  }
-
-  function getCurrentPageData(transfers, page) {
-    const startIndex = (page - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return transfers.slice(startIndex, endIndex);
-  }
-
-  function updatePagination(transfers) {
-    const totalPages = getTotalPages(transfers);
+  // 查询更多数据
+  async function loadMoreData() {
+    if (!currentAddress) return;
     
-    if (totalPages <= 1) {
-      els.pagination.classList.add("hidden");
+    // 如果没有 pageKey，说明已经查完所有数据
+    if (!pageKey) {
+      setStatus("noMoreData");
+      els.loadMoreBtn.disabled = true;
+      els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
+      setTimeout(() => {
+        els.status.innerHTML = "";
+      }, 3000);
       return;
     }
     
-    els.pagination.classList.remove("hidden");
-    els.prevPage.disabled = currentPage === 1;
-    els.nextPage.disabled = currentPage === totalPages;
+    // 显示表格下方的加载状态
+    els.loadMoreBtn.disabled = true;
+    els.loadMoreStatus.classList.remove("hidden");
+    els.loadMoreStatusText.textContent = I18N().DICT[I18N().getLang()].loadingMore;
     
-    const d = I18N().DICT[I18N().getLang()];
-    const pageText = d.pageInfo || "第 {current} 页，共 {total} 页";
-    els.pageInfo.textContent = pageText
-      .replace("{current}", currentPage)
-      .replace("{total}", totalPages);
-    
-    // 更新按钮文本
-    els.prevPage.querySelector('#prevText').textContent = d.prevPage || "← 上一页";
-    els.nextPage.querySelector('#nextText').textContent = d.nextPage || "下一页 →";
+    try {
+      // 使用 pageKey 查询下一页数据
+      const result = await API().fetchTransfers(currentAddress, incrementCount, pageKey);
+      if (!result.transfers.length) { 
+        setStatus("noMoreData");
+        els.loadMoreBtn.disabled = true;
+        els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
+        els.loadMoreStatus.classList.add("hidden");
+        setTimeout(() => {
+          els.status.innerHTML = "";
+        }, 3000);
+        return; 
+      }
+
+      // 合并新数据到现有数据
+      allTransfers = [...allTransfers, ...result.transfers];
+      pageKey = result.pageKey; // 更新 pageKey
+      currentCount = allTransfers.length;
+      
+      els.count.textContent = I18N().DICT[I18N().getLang()].countText(allTransfers.length);
+      
+      // 渲染所有数据
+      renderTable(allTransfers, currentAddress);
+
+      // 隐藏加载状态
+      els.loadMoreStatus.classList.add("hidden");
+      
+      // 自动滚动到查询更多按钮
+      setTimeout(() => {
+        // 滚动到查询更多按钮
+        const loadMoreBtn = els.loadMoreBtn;
+        if (loadMoreBtn && !loadMoreBtn.classList.contains('hidden')) {
+          loadMoreBtn.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center',
+            inline: 'nearest'
+          });
+        } else {
+          // 备用方案：滚动到结果容器底部
+          const resultContainer = els.result;
+          if (resultContainer) {
+            resultContainer.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'end' 
+            });
+          }
+        }
+      }, 300);
+
+      // 如果没有下一页的 pageKey，禁用按钮
+      if (!pageKey) {
+        els.loadMoreBtn.disabled = true;
+        els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
+      } else {
+        // 重新启用按钮
+        els.loadMoreBtn.disabled = false;
+        els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].loadMoreBtn;
+      }
+
+    } catch (e) {
+      setStatus("fetchErrorPrefix", e.message || String(e));
+      els.loadMoreStatus.classList.add("hidden");
+      els.loadMoreBtn.disabled = false;
+    }
   }
 
   function renderTable(transfers, address) {
-    els.tbody.innerHTML = "";
-    const fmt = I18N().timeFormatter();
-    const me = address.toLowerCase();
+    // 添加淡出效果
+    els.tbody.style.opacity = "0.5";
+    els.tbody.style.transition = "opacity 0.2s ease";
+    
+    setTimeout(() => {
+      els.tbody.innerHTML = "";
+      const fmt = I18N().timeFormatter();
+      const me = address.toLowerCase();
 
-    // 获取当前页数据
-    const pageData = getCurrentPageData(transfers, currentPage);
-    updatePagination(transfers);
-
-    const frag = document.createDocumentFragment();
-    pageData.slice().reverse().forEach((tx, i) => {
-      const dirKey = (tx.to || "").toLowerCase() === me ? "in" : "out";
-      const tr = document.createElement("tr");
-      tr.className = "table-row";
-      tr.style.animationDelay = `${i * 0.1}s`;
-      
-      // 添加方向图标
-      const directionIcon = dirKey === "in" ? "📥" : "📤";
-      const directionClass = dirKey === "in" ? "direction-in" : "direction-out";
-      
-      // 计算总序号
-      const totalIndex = (currentPage - 1) * itemsPerPage + i + 1;
+      const frag = document.createDocumentFragment();
+      transfers.slice().reverse().forEach((tx, i) => {
+        const dirKey = (tx.to || "").toLowerCase() === me ? "in" : "out";
+        const tr = document.createElement("tr");
+        tr.className = "table-row";
+        tr.style.animationDelay = `${i * 0.05}s`; // 减少动画延迟
+        
+        // 添加方向图标
+        const directionIcon = dirKey === "in" ? "📥" : "📤";
+        const directionClass = dirKey === "in" ? "direction-in" : "direction-out";
+        
+        // 计算序号
+        const totalIndex = i + 1;
       
       tr.innerHTML = `
         <td class="px-4 py-2 text-center font-mono text-sm text-gray-400">${totalIndex}</td>
@@ -221,40 +275,62 @@
         </td>
         <td class="px-4 py-2 text-right font-mono text-sm text-gray-400">${tx.gas_fee || "-"}</td>
       `;
-      frag.appendChild(tr);
-    });
-    els.tbody.appendChild(frag);
+        frag.appendChild(tr);
+      });
+      els.tbody.appendChild(frag);
+      
+      // 恢复透明度
+      els.tbody.style.opacity = "1";
+    }, 200);
   }
 
   async function onSearch() {
     const addr = (els.input.value || "").trim();
     if (!/^0x[a-fA-F0-9]{40}$/.test(addr)) { setStatus("invalidAddress"); return; }
 
+    currentAddress = addr;
+    currentCount = 10; // 重置为初始10条
+    pageKey = null; // 重置分页键
+    
     setStatus("querying");
     els.count.textContent = "";
     els.download.classList.add("hidden");
-    els.pagination.classList.add("hidden");
-    currentPage = 1; // 重置到第一页
+    els.loadMoreBtn.classList.add("hidden");
 
     try {
-      const transfers = await API().fetchTransfers(addr);
-      if (!transfers.length) { setStatus("noRecords"); return; }
+      // 初始查询10条数据
+      const result = await API().fetchTransfers(addr, currentCount, pageKey);
+      if (!result.transfers.length) { setStatus("noRecords"); return; }
 
-      lastTransfers = transfers;
+      allTransfers = result.transfers;
+      pageKey = result.pageKey; // 保存下一页的 pageKey
+      
       els.result.classList.remove("hidden");
-      els.count.textContent = I18N().DICT[I18N().getLang()].countText(transfers.length);
+      els.count.textContent = I18N().DICT[I18N().getLang()].countText(allTransfers.length);
       
       // 显示成功状态
-      setStatus("success", transfers.length);
+      setStatus("success", allTransfers.length);
       setTimeout(() => {
         els.status.innerHTML = "";
       }, 2000);
 
-      renderTable(transfers, addr);
+      // 渲染所有数据
+      renderTable(allTransfers, addr);
 
       els.download.href = API().csvUrl(addr);
       els.download.textContent = I18N().DICT[I18N().getLang()].download;
       els.download.classList.remove("hidden");
+      els.loadMoreBtn.classList.remove("hidden");
+      
+      // 重置查询更多按钮状态
+      if (pageKey) {
+        els.loadMoreBtn.disabled = false;
+        els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].loadMoreBtn;
+      } else {
+        // 如果没有 pageKey，说明数据不足10条或已查完
+        els.loadMoreBtn.disabled = true;
+        els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
+      }
 
       History().add(addr);
       History().render("historyContainer", (a) => { els.input.value = a; onSearch(); });
@@ -278,25 +354,8 @@
       updateLangButtons();
     });
     
-    // 分页按钮事件
-    els.prevPage.addEventListener("click", () => {
-      if (currentPage > 1) {
-        currentPage--;
-        if (lastTransfers && els.input.value) {
-          renderTable(lastTransfers, els.input.value);
-        }
-      }
-    });
-    
-    els.nextPage.addEventListener("click", () => {
-      const totalPages = getTotalPages(lastTransfers || []);
-      if (currentPage < totalPages) {
-        currentPage++;
-        if (lastTransfers && els.input.value) {
-          renderTable(lastTransfers, els.input.value);
-        }
-      }
-    });
+    // 查询更多按钮事件
+    els.loadMoreBtn.addEventListener("click", loadMoreData);
   }
 
   function updateLangButtons() {
@@ -333,10 +392,14 @@
     I18N().applyStatic();
     updateLangButtons(); // 更新语言按钮状态
     History().render("historyContainer", (a) => { els.input.value = a; onSearch(); });
-    if (lastTransfers && els.input.value) {
-      renderTable(lastTransfers, els.input.value);
-      els.count.textContent = I18N().DICT[I18N().getLang()].countText(lastTransfers.length);
+    if (allTransfers && els.input.value) {
+      renderTable(allTransfers, els.input.value);
       els.download.textContent = I18N().DICT[I18N().getLang()].download;
+      // 只有在按钮未禁用时才更新文本
+      if (!els.loadMoreBtn.disabled) {
+        els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].loadMoreBtn;
+      }
+      els.loadMoreStatusText.textContent = I18N().DICT[I18N().getLang()].loadingMore;
     }
   }
 

@@ -62,7 +62,7 @@ npm install
 在项目根目录创建 `.env` 文件：
 
 ```env
-ALCHEMY_URL=https://eth-mainnet.g.alchemy.com/v2/[你的API密钥]
+ALCHEMY_API_KEY=你的API密钥
 ```
 
 > ⚠️ **重要**：请勿将 `.env` 文件提交到版本控制。
@@ -203,7 +203,7 @@ python serchain.py
 
 1. **连接仓库** 到 Railway
 2. **设置环境变量**：
-   - `ALCHEMY_URL`: 你的 Alchemy API 密钥
+   - `ALCHEMY_API_KEY`: 你的 Alchemy API 密钥
 3. **配置构建设置**：
    - **构建命令**：
      ```bash

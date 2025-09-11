@@ -32,32 +32,49 @@ def get_gas_fee(tx_hash):
     return round(gas_fee_eth, 8)
 
 # === 请求链上转账数据 ===
-def get_asset_transfers(address):
+def get_asset_transfers(address, max_count=50, page_key=None):
+    # 将数字转换为十六进制
+    max_count_hex = hex(max_count)
+    
+    params = {
+        "fromBlock": "0x0",
+        "toBlock": "latest",
+        "toAddress": address,
+        "category": ["external", "internal", "erc20"],
+        "maxCount": max_count_hex,
+        "withMetadata": True
+    }
+    
+    # 如果有pageKey，添加分页参数
+    if page_key:
+        params["pageKey"] = page_key
+    
     payload = {
         "jsonrpc": "2.0",
         "id": 1,
         "method": "alchemy_getAssetTransfers",
-        "params": [{
-            "fromBlock": "0x0",
-            "toBlock": "latest",
-            "toAddress": address,
-            "category": ["external", "internal", "erc20"],
-            "maxCount": "0x14",
-            "withMetadata": True
-        }]
+        "params": [params]
     }
+    
     headers = {"Content-Type": "application/json"}
     response = requests.post(ALCHEMY_URL, headers=headers, data=json.dumps(payload))
 
     if response.status_code == 200:
-        transfers = response.json().get("result", {}).get("transfers", [])
+        result = response.json().get("result", {})
+        transfers = result.get("transfers", [])
+        next_page_key = result.get("pageKey")
+        
         for tx in transfers:
             gas_fee = get_gas_fee(tx['hash'])
             tx['gas_fee'] = gas_fee
-        return transfers
+            
+        return {
+            "transfers": transfers,
+            "pageKey": next_page_key
+        }
     else:
         print("❌ Error:", response.text)
-        return []
+        return {"transfers": [], "pageKey": None}
 
 # === 控制台输出转账记录（带方向） ===
 def display_transfers(transfers, address):
@@ -135,7 +152,8 @@ def main():
         return
 
     print(f"\n🔍 Fetching transfers for: {address} ...")
-    transfers = get_asset_transfers(address)
+    result = get_asset_transfers(address)
+    transfers = result["transfers"]
     display_transfers(transfers, address)
     save_to_csv(transfers, address)
 

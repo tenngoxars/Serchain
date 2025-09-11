@@ -62,7 +62,7 @@ npm install
 Create a `.env` file in the project root:
 
 ```env
-ALCHEMY_URL=https://eth-mainnet.g.alchemy.com/v2/[your-api-key-here]
+ALCHEMY_API_KEY=your-api-key-here
 ```
 
 > ⚠️ **Important**: Never commit your `.env` file to version control.
@@ -203,7 +203,7 @@ The web interface displays the same data in a beautiful, sortable table with:
 
 1. **Connect your repository** to Railway
 2. **Set environment variables**:
-   - `ALCHEMY_URL`: Your Alchemy API key
+   - `ALCHEMY_API_KEY`: Your Alchemy API key
 3. **Configure build settings**:
    - **Build Command**:
      ```bash
