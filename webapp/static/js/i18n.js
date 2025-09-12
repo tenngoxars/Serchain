@@ -26,6 +26,12 @@
       loadMoreBtn: "查询更多",
       noMoreData: "✅ 已查询完所有记录",
       loadingMore: "正在查询更多数据...",
+      filterAll: "全部",
+      filterReceived: "转入",
+      filterSent: "转出",
+      countWithFilter: (total, filtered, mode) => `共 ${total} 条记录，显示 ${filtered} 条${mode}记录`,
+      refreshBtn: "刷新",
+      queryTime: "查询时间",
       locale: "zh-CN"
     },
     en: {
@@ -53,6 +59,12 @@
       loadMoreBtn: "Load More",
       noMoreData: "✅ All records loaded",
       loadingMore: "Loading more data...",
+      filterAll: "All",
+      filterReceived: "Received",
+      filterSent: "Sent",
+      countWithFilter: (total, filtered, mode) => `${total} total records, showing ${filtered} ${mode} records`,
+      refreshBtn: "Refresh",
+      queryTime: "Query Time",
       locale: "en-US"
     }
   };

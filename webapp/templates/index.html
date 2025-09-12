@@ -180,6 +180,30 @@
       left: 100%;
     }
 
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #e5e7eb;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
     /* 确保下载链接按钮样式正确应用 */
     a.btn, a.btn:hover, a.btn:visited, a.btn:active {
       color: white !important;
@@ -256,6 +280,93 @@
     }
     .history-close:hover {
       color: #ffffff;
+    }
+
+    /* 标签选择器样式 */
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      background: transparent;
+      border: none;
+      color: #9ca3af;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #e5e7eb;
+      transform: translateY(-1px);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, 
+        rgba(200, 70, 194, 0.2) 0%, 
+        rgba(200, 70, 194, 0.1) 100%);
+      color: #c846c2;
+      border: 1px solid rgba(200, 70, 194, 0.3);
+      box-shadow: 
+        0 4px 12px rgba(200, 70, 194, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .tab-icon {
+      font-size: 1rem;
+      line-height: 1;
+      transition: transform 0.2s ease;
+    }
+
+    .tab-btn:hover .tab-icon {
+      transform: scale(1.1);
+    }
+
+    .tab-btn.active .tab-icon {
+      transform: scale(1.1);
+      filter: drop-shadow(0 0 4px rgba(200, 70, 194, 0.3));
+    }
+
+    .tab-text {
+      font-size: 0.875rem;
+      font-weight: 500;
+      letter-spacing: 0.025em;
+    }
+
+    @media (max-width: 640px) {
+      .tab-btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8rem;
+      }
+      .tab-icon {
+        font-size: 0.875rem;
+      }
+    }
+
+    /* 表格容器平滑过渡 */
+    .table-container {
+      transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+
+    /* 表格内容淡入淡出 */
+    .table-content {
+      transition: opacity 0.3s ease-in-out;
+    }
+
+    .table-content.fade-out {
+      opacity: 0;
+    }
+
+    .table-content.fade-in {
+      opacity: 1;
     }
 
     /* 加载动画 */
@@ -554,8 +665,29 @@
     <div id="status" class="text-sm text-gray-300 text-center mt-2"></div>
 
     <div id="resultContainer" class="hidden card">
-      <p id="countText" class="text-sm text-gray-400 mb-4"></p>
-      <div class="overflow-x-auto rounded-md border border-zinc-700 w-full">
+      <div class="flex justify-between items-center mb-4">
+        <div class="flex items-center gap-3">
+          <p id="countText" class="text-sm text-gray-400"></p>
+          <span id="cacheStatus" class="text-xs text-blue-300 font-medium"></span>
+        </div>
+        
+        <!-- 标签选择器 -->
+        <div class="flex items-center gap-1 bg-gray-800/30 rounded-lg p-1">
+          <button id="filterAll" class="tab-btn active">
+            <span class="tab-icon">📊</span>
+            <span class="tab-text">全部</span>
+          </button>
+          <button id="filterReceived" class="tab-btn">
+            <span class="tab-icon">📥</span>
+            <span class="tab-text">转入</span>
+          </button>
+          <button id="filterSent" class="tab-btn">
+            <span class="tab-icon">📤</span>
+            <span class="tab-text">转出</span>
+          </button>
+        </div>
+      </div>
+      <div class="overflow-x-auto rounded-md border border-zinc-700 w-full table-container">
         <table class="min-w-full text-sm text-left text-white whitespace-nowrap">
           <thead class="bg-white/10 text-gray-400">
             <tr>
@@ -569,13 +701,17 @@
               <th id="th-gas" data-key="gasFee" class="px-4 py-2 text-center"></th>
             </tr>
           </thead>
-          <tbody id="resultsTableBody" class="divide-y divide-zinc-700"></tbody>
+          <tbody id="resultsTableBody" class="divide-y divide-zinc-700 table-content"></tbody>
         </table>
       </div>
 
       <div class="mt-4 text-center flex justify-center gap-3">
         <a id="downloadLink" href="#" class="btn text-sm hidden">下载 CSV</a>
         <button id="loadMoreBtn" class="btn text-sm hidden">查询更多</button>
+        <button id="refreshBtn" class="btn-secondary hidden" title="刷新获取最新数据">
+          <span>🔄</span>
+          <span class="refresh-text">刷新</span>
+        </button>
       </div>
       
       <!-- 查询更多时的状态提示 -->

@@ -6,10 +6,109 @@
 
   let els = {};
   let allTransfers = null; // 存储所有数据
+  let filteredTransfers = null; // 存储筛选后的数据
   let currentAddress = "";
   let currentCount = 10; // 当前查询的数据量
   let pageKey = null; // Alchemy 分页的 pageKey
+  let currentFilter = "all"; // 当前筛选模式
   const incrementCount = 10; // 每次增加的条数
+
+  // 缓存系统
+  const CACHE_CONFIG = {
+    duration: 5 * 60 * 1000, // 5分钟缓存
+    maxSize: 50,             // 最多缓存50个地址
+    enableRefresh: true      // 允许手动刷新
+  };
+  
+  const cache = new Map(); // 缓存存储
+  let cacheTimestamp = null; // 当前数据的缓存时间
+
+  // 缓存管理函数
+  function getCachedData(address) {
+    const cached = cache.get(address);
+    if (cached && Date.now() - cached.timestamp < CACHE_CONFIG.duration) {
+      return cached.data;
+    }
+    return null;
+  }
+
+  function setCachedData(address, data) {
+    // 清理过期缓存
+    cleanExpiredCache();
+    
+    // 限制缓存大小
+    if (cache.size >= CACHE_CONFIG.maxSize) {
+      const firstKey = cache.keys().next().value;
+      cache.delete(firstKey);
+    }
+    
+    cache.set(address, {
+      data: data,
+      timestamp: Date.now()
+    });
+  }
+
+  function cleanExpiredCache() {
+    const now = Date.now();
+    for (const [key, value] of cache.entries()) {
+      if (now - value.timestamp >= CACHE_CONFIG.duration) {
+        cache.delete(key);
+      }
+    }
+  }
+
+  function isDataFromCache() {
+    return cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_CONFIG.duration);
+  }
+
+  function updateCacheStatus() {
+    const statusEl = document.getElementById('cacheStatus');
+    if (statusEl) {
+      // 如果没有查询过数据，不显示状态
+      if (!allTransfers || !cacheTimestamp) {
+        statusEl.textContent = '';
+        return;
+      }
+      
+      // 显示用户本地时间
+      const queryTime = new Date(cacheTimestamp);
+      const locale = I18N().getLang() === 'zh' ? 'zh-CN' : 'en-US';
+      
+      // 根据语言选择不同的时区显示方式
+      let timeString;
+      if (I18N().getLang() === 'zh') {
+        // 中文：先获取日期时间，再单独获取时区名称
+        const dateTime = queryTime.toLocaleString(locale, {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        const timeZoneName = queryTime.toLocaleString(locale, {
+          timeZoneName: 'long'
+        }).split(' ').pop();
+        timeString = `${dateTime} ${timeZoneName}`;
+      } else {
+        // 英文：使用时区缩写，24小时格式
+        timeString = queryTime.toLocaleString(locale, {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          timeZoneName: 'short',
+          hour12: false
+        });
+      }
+      
+      statusEl.textContent = `${I18N().DICT[I18N().getLang()].queryTime}: ${timeString}`;
+      statusEl.className = 'text-xs text-blue-300 font-medium';
+    }
+  }
 
   function cacheDom() {
     els = {
@@ -25,7 +124,10 @@
       history: document.getElementById("historyContainer"),
       loadMoreBtn: document.getElementById("loadMoreBtn"),
       loadMoreStatus: document.getElementById("loadMoreStatus"),
-      loadMoreStatusText: document.getElementById("loadMoreStatusText")
+      loadMoreStatusText: document.getElementById("loadMoreStatusText"),
+      filterAll: document.getElementById("filterAll"),
+      filterReceived: document.getElementById("filterReceived"),
+      filterSent: document.getElementById("filterSent")
     };
   }
 
@@ -78,6 +180,109 @@
       els.status.style.opacity = "1";
       els.status.style.transition = "";
     }, 300);
+  }
+
+  // 筛选功能
+  function setFilter(filter, skipAnimation = false) {
+    currentFilter = filter;
+    
+    // 更新按钮状态
+    els.filterAll.classList.toggle("active", filter === "all");
+    els.filterReceived.classList.toggle("active", filter === "received");
+    els.filterSent.classList.toggle("active", filter === "sent");
+    
+    // 筛选数据
+    filterTransfers();
+    
+    // 根据情况选择是否使用动画
+    if (skipAnimation) {
+      // 直接渲染，不使用动画
+      renderTable(filteredTransfers, currentAddress);
+      updateCount();
+    } else {
+      // 平滑过渡效果
+      smoothTableTransition();
+    }
+  }
+
+  // 平滑表格过渡
+  function smoothTableTransition() {
+    const tableContainer = document.querySelector('.table-container');
+    const tbody = els.tbody;
+    
+    // 记录当前高度
+    const currentHeight = tableContainer.offsetHeight;
+    
+    // 添加淡出效果
+    tbody.classList.add('fade-out');
+    
+    setTimeout(() => {
+      // 重新渲染表格
+      renderTable(filteredTransfers, currentAddress);
+      
+      // 更新计数
+      updateCount();
+      
+      // 记录新高度
+      const newHeight = tableContainer.offsetHeight;
+      
+      // 设置过渡高度
+      tableContainer.style.height = currentHeight + 'px';
+      
+      // 强制重排
+      tableContainer.offsetHeight;
+      
+      // 过渡到新高度
+      tableContainer.style.height = newHeight + 'px';
+      
+      // 添加淡入效果
+      tbody.classList.remove('fade-out');
+      tbody.classList.add('fade-in');
+      
+      // 过渡完成后移除高度限制
+      setTimeout(() => {
+        tableContainer.style.height = '';
+        tbody.classList.remove('fade-in');
+      }, 400);
+      
+    }, 150);
+  }
+
+  function filterTransfers() {
+    if (!allTransfers) return;
+    
+    const me = currentAddress.toLowerCase();
+    
+    switch (currentFilter) {
+      case "received":
+        filteredTransfers = allTransfers.filter(tx => 
+          (tx.to || "").toLowerCase() === me
+        );
+        break;
+      case "sent":
+        filteredTransfers = allTransfers.filter(tx => 
+          (tx.from || "").toLowerCase() === me
+        );
+        break;
+      default:
+        filteredTransfers = allTransfers;
+    }
+  }
+
+  function updateCount() {
+    const total = allTransfers ? allTransfers.length : 0;
+    const filtered = filteredTransfers ? filteredTransfers.length : 0;
+    
+    if (currentFilter === "all") {
+      // 全部标签：显示总记录数
+      els.count.textContent = I18N().DICT[I18N().getLang()].countText(total);
+    } else {
+      // 转入/转出标签：只显示筛选后的记录数
+      const modeText = currentFilter === "received" ? 
+        I18N().DICT[I18N().getLang()].filterReceived : 
+        I18N().DICT[I18N().getLang()].filterSent;
+      els.count.textContent = I18N().DICT[I18N().getLang()].countText(filtered);
+    }
   }
 
   function formatValue(v) {
@@ -207,10 +412,10 @@
       pageKey = result.pageKey; // 更新 pageKey
       currentCount = allTransfers.length;
       
-      els.count.textContent = I18N().DICT[I18N().getLang()].countText(allTransfers.length);
-      
-      // 渲染所有数据
-      renderTable(allTransfers, currentAddress);
+      // 重新筛选数据（跳过动画，因为是加载更多）
+      filterTransfers();
+      renderTable(filteredTransfers, currentAddress);
+      updateCount();
 
       // 隐藏加载状态
       els.loadMoreStatus.classList.add("hidden");
@@ -302,13 +507,54 @@
     els.tbody.appendChild(frag);
   }
 
-  async function onSearch() {
+  async function onSearch(forceRefresh = false) {
     const addr = (els.input.value || "").trim();
     if (!/^0x[a-fA-F0-9]{40}$/.test(addr)) { setStatus("invalidAddress"); return; }
 
     currentAddress = addr;
     currentCount = 10; // 重置为初始10条
     pageKey = null; // 重置分页键
+    
+    // 检查缓存
+    if (!forceRefresh) {
+      const cachedData = getCachedData(addr);
+      if (cachedData) {
+        allTransfers = cachedData.transfers;
+        pageKey = cachedData.pageKey;
+        currentFilter = "all";
+        cacheTimestamp = cachedData.timestamp;
+        
+        // 显示结果容器
+        els.result.classList.remove("hidden");
+        
+        // 设置默认筛选（跳过动画，因为是缓存数据）
+        setFilter("all", true);
+        
+        // 更新缓存状态
+        updateCacheStatus();
+        
+        els.download.textContent = I18N().DICT[I18N().getLang()].download;
+        els.download.classList.remove("hidden");
+        els.loadMoreBtn.classList.remove("hidden");
+        
+        // 显示成功状态
+        setStatus("success", allTransfers.length);
+        fadeOutStatus(2000);
+        
+        // 重置查询更多按钮状态
+        if (pageKey) {
+          els.loadMoreBtn.disabled = false;
+          els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].loadMoreBtn;
+        } else {
+          els.loadMoreBtn.disabled = true;
+          els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
+        }
+        
+        History().add(addr);
+        History().render("historyContainer", (a) => { els.input.value = a; onSearch(); });
+        return;
+      }
+    }
     
     setStatus("querying");
     els.count.textContent = "";
@@ -328,6 +574,15 @@
 
       allTransfers = result.transfers;
       pageKey = result.pageKey; // 保存下一页的 pageKey
+      currentFilter = "all"; // 重置筛选模式
+      cacheTimestamp = Date.now(); // 记录缓存时间
+      
+      // 保存到缓存
+      setCachedData(addr, {
+        transfers: result.transfers,
+        pageKey: result.pageKey,
+        timestamp: cacheTimestamp
+      });
       
       // 先渐隐查询中动画
       fadeOutQuerying();
@@ -336,14 +591,22 @@
       setTimeout(() => {
         // 显示结果容器
         els.result.classList.remove("hidden");
-        els.count.textContent = I18N().DICT[I18N().getLang()].countText(allTransfers.length);
         
-        // 渲染所有数据
-        renderTable(allTransfers, addr);
+        // 设置默认筛选（跳过动画，因为是初始加载）
+        setFilter("all", true);
+        
+        // 更新缓存状态
+        updateCacheStatus();
 
         els.download.textContent = I18N().DICT[I18N().getLang()].download;
         els.download.classList.remove("hidden");
         els.loadMoreBtn.classList.remove("hidden");
+        
+        // 显示刷新按钮
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+          refreshBtn.classList.remove("hidden");
+        }
         
         // 显示成功状态
         setStatus("success", allTransfers.length);
@@ -375,6 +638,13 @@
 
   function initEvents() {
     els.btn.addEventListener("click", onSearch);
+    
+    // 刷新按钮事件
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", () => onSearch(true));
+    }
+    
     els.input.addEventListener("keydown", (e) => { if (e.key === "Enter") onSearch(); });
     
     // 语言切换按钮事件
@@ -390,6 +660,11 @@
     
     // 查询更多按钮事件
     els.loadMoreBtn.addEventListener("click", loadMoreData);
+    
+    // 筛选按钮事件
+    els.filterAll.addEventListener("click", () => setFilter("all"));
+    els.filterReceived.addEventListener("click", () => setFilter("received"));
+    els.filterSent.addEventListener("click", () => setFilter("sent"));
     
     // 下载按钮事件
     els.download.addEventListener("click", async (e) => {
@@ -433,6 +708,26 @@
     History().render("historyContainer", (a) => { els.input.value = a; onSearch(); });
     initEvents();
     initVanta();
+    
+    // 初始化标签按钮文本
+    updateFilterButtonTexts();
+    
+    // 初始化缓存状态显示
+    updateCacheStatus();
+  }
+
+  function updateFilterButtonTexts() {
+    if (els.filterAll) {
+      els.filterAll.querySelector('.tab-text').textContent = I18N().DICT[I18N().getLang()].filterAll;
+      els.filterReceived.querySelector('.tab-text').textContent = I18N().DICT[I18N().getLang()].filterReceived;
+      els.filterSent.querySelector('.tab-text').textContent = I18N().DICT[I18N().getLang()].filterSent;
+    }
+    
+    // 更新刷新按钮文本
+    const refreshText = document.querySelector('.refresh-text');
+    if (refreshText) {
+      refreshText.textContent = I18N().DICT[I18N().getLang()].refreshBtn;
+    }
   }
 
   function rerenderOnLang() {
@@ -440,7 +735,22 @@
     updateLangButtons(); // 更新语言按钮状态
     History().render("historyContainer", (a) => { els.input.value = a; onSearch(); });
     if (allTransfers && els.input.value) {
-      renderTable(allTransfers, els.input.value);
+      // 重新筛选数据（跳过动画，因为是语言切换）
+      filterTransfers();
+      renderTable(filteredTransfers, els.input.value);
+      updateCount();
+      
+      // 更新按钮状态
+      els.filterAll.classList.toggle("active", currentFilter === "all");
+      els.filterReceived.classList.toggle("active", currentFilter === "received");
+      els.filterSent.classList.toggle("active", currentFilter === "sent");
+      
+      // 更新标签按钮文本
+      updateFilterButtonTexts();
+      
+      // 更新缓存状态显示
+      updateCacheStatus();
+      
       els.download.textContent = I18N().DICT[I18N().getLang()].download;
       // 只有在按钮未禁用时才更新文本
       if (!els.loadMoreBtn.disabled) {
