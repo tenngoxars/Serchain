@@ -44,40 +44,6 @@
   100% { background-position: -200% 0; }
 }
 
-/* 分页按钮样式 */
-.pagination-btn {
-  background: linear-gradient(135deg, #c846c2 0%, #7a2ea0 50%, #5b21b6 100%);
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(200, 70, 194, 0.3);
-  position: relative;
-  overflow: hidden;
-  transform: scale(1);
-}
-
-.pagination-btn:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 4px 14px rgba(200, 70, 194, 0.4);
-}
-
-.pagination-btn:active:not(:disabled) {
-  transform: translateY(0) scale(0.95);
-}
-
-.pagination-btn:disabled {
-  background: rgba(107, 114, 128, 0.5);
-  color: rgba(156, 163, 175, 0.8);
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
 /* 查询更多按钮禁用状态 */
 .btn:disabled {
   background: rgba(34, 197, 94, 0.3);

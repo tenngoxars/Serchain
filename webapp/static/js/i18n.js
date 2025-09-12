@@ -39,6 +39,9 @@
       queryTime: "查询时间",
       noDataMessage: "暂无数据",
       noDataSubMessage: "请尝试其他筛选条件",
+      builtBy: "开发者：",
+      viewOnGitHub: "GitHub 源码",
+      apacheLicense: "Apache-2.0 开源协议",
       locale: "zh-CN"
     },
     en: {
@@ -79,6 +82,9 @@
       queryTime: "Query Time",
       noDataMessage: "No Data",
       noDataSubMessage: "Try different filter options",
+      builtBy: "Built by",
+      viewOnGitHub: "View on GitHub",
+      apacheLicense: "Apache-2.0 License",
       locale: "en-US"
     }
   };

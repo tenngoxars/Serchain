@@ -961,12 +961,12 @@
     // 语言切换按钮事件
     els.langZh.addEventListener("click", () => {
       I18N().setLang("zh");
-      updateLangButtons();
+      rerenderOnLang();
     });
     
     els.langEn.addEventListener("click", () => {
       I18N().setLang("en");
-      updateLangButtons();
+      rerenderOnLang();
     });
     
     // 查询更多按钮事件
@@ -998,9 +998,11 @@
   }
 
   function initVanta() {
-    // 三方脚本加载异常时不影响主流程
-    if (!(root.VANTA && root.VANTA.NET)) return;
-    try {
+    
+    // 等待vanta脚本加载
+    const checkVanta = () => {
+      if (root.VANTA && root.VANTA.NET) {
+        try {
       root.VANTA.NET({
         el: "#vanta-bg",
         mouseControls: true, touchControls: true, gyroControls: false,
@@ -1008,8 +1010,16 @@
         color: 0xc846c2, backgroundColor: 0x23153c, points: 12.0, maxDistance: 22.0, spacing: 18.0
       });
     } catch (e) {
-      console.warn("VANTA init failed:", e);
-    }
+          console.error("VANTA init failed:", e);
+        }
+      } else {
+        // 如果vanta还没加载，继续等待
+        setTimeout(checkVanta, 100);
+      }
+    };
+    
+    // 延迟检查，确保DOM和脚本都加载完成
+    setTimeout(checkVanta, 200);
   }
 
   function init() {
@@ -1045,11 +1055,25 @@
     if (els.refreshText) {
       els.refreshText.textContent = I18N().DICT[I18N().getLang()].refreshBtn;
     }
+    
+    // 更新底部信息文本
+    const builtByText = document.getElementById('builtByText');
+    const viewOnGitHubText = document.getElementById('viewOnGitHubText');
+    const apacheLicenseText = document.getElementById('apacheLicenseText');
+    
+    
+    if (builtByText) builtByText.textContent = I18N().DICT[I18N().getLang()].builtBy;
+    if (viewOnGitHubText) viewOnGitHubText.textContent = I18N().DICT[I18N().getLang()].viewOnGitHub;
+    if (apacheLicenseText) apacheLicenseText.textContent = I18N().DICT[I18N().getLang()].apacheLicense;
   }
 
   function rerenderOnLang() {
     I18N().applyStatic();
     updateLangButtons(); // 更新语言按钮状态
+    
+    // 更新标签按钮文本和底部信息（无条件执行）
+    updateFilterButtonTexts();
+    
     History().render("historyContainer", (a) => { els.input.value = a; onSearch(); });
     if (allTransfers && els.input.value) {
       // 重新筛选数据（跳过动画，因为是语言切换）
@@ -1061,9 +1085,6 @@
       els.filterAll.classList.toggle("active", currentFilter === "all");
       els.filterReceived.classList.toggle("active", currentFilter === "received");
       els.filterSent.classList.toggle("active", currentFilter === "sent");
-      
-      // 更新标签按钮文本
-      updateFilterButtonTexts();
       
       // 更新缓存状态显示
       updateCacheStatus();

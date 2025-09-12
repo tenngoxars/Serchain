@@ -2,12 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS 变量定义 */
+:root {
+  --primary-gradient: linear-gradient(135deg, #c846c2 0%, #7a2ea0 50%, #5b21b6 100%);
+  --secondary-gradient: linear-gradient(135deg, #d856d2, #8a3eb0);
+  --hover-gradient: linear-gradient(135deg, #e866e2, #9a4ec0);
+  --shimmer-gradient: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.2) 50%, transparent 100%);
+}
+
 /* 基础样式 */
 body {
   font-family: 'JetBrains Mono', monospace;
-  background: linear-gradient(135deg, #0b0b10 0%, #1a0b2e 50%, #16213e 100%);
   color: #e7e7ea;
   min-height: 100vh;
+  background: linear-gradient(135deg, #0b0b10 0%, #1a0b2e 50%, #16213e 100%); /* 备用背景渐变 */
 }
 
 /* 网格细节覆盖 (不添加额外背景，只统一层次感) */

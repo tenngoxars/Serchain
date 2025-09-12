@@ -39,7 +39,7 @@
 
 /* 增强的按钮样式 */
 .btn {
-  background: linear-gradient(135deg, #c846c2 0%, #7a2ea0 50%, #5b21b6 100%);
+  background: var(--primary-gradient);
   color: white !important;
   padding: 0.75rem 1.5rem;
   border-radius: 0.75rem;
@@ -65,10 +65,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(255,255,255,.2) 50%, 
-    transparent 100%);
+  background: var(--shimmer-gradient);
   transition: left 0.5s ease;
   border-radius: inherit;
 }
@@ -205,7 +202,7 @@ a.btn, a.btn:hover, a.btn:visited, a.btn:active {
 }
 
 .lang-btn.active:hover {
-  background: linear-gradient(135deg, #d856d2, #8a3eb0);
+  background: var(--secondary-gradient);
   box-shadow: 0 6px 20px rgba(200, 70, 194, 0.4);
 }
 
@@ -257,4 +254,10 @@ a.btn, a.btn:hover, a.btn:visited, a.btn:active {
 
 .github-btn:hover svg {
   transform: scale(1.1);
+}
+
+/* 页面底部样式 */
+footer a {
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
