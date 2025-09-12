@@ -24,6 +24,52 @@ app = Flask(__name__, static_folder='static', static_url_path='/static')
 # 确保生产环境中正确处理静态文件
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
+# 安全配置
+@app.after_request
+def add_security_headers(response):
+    """添加安全头部"""
+    # Content Security Policy (CSP)
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "img-src 'self' data: https:; "
+        "connect-src 'self' https://eth-mainnet.g.alchemy.com; "
+        "frame-ancestors 'none'; "
+        "base-uri 'self'; "
+        "form-action 'self'"
+    )
+    
+    # HTTP Strict Transport Security (HSTS)
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
+    
+    # X-Content-Type-Options
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    
+    # X-Frame-Options
+    response.headers['X-Frame-Options'] = 'DENY'
+    
+    # X-XSS-Protection
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
+    # Referrer Policy
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
+    # Permissions Policy
+    response.headers['Permissions-Policy'] = (
+        "geolocation=(), "
+        "microphone=(), "
+        "camera=(), "
+        "payment=(), "
+        "usb=(), "
+        "magnetometer=(), "
+        "gyroscope=(), "
+        "speaker=()"
+    )
+    
+    return response
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     transfers = None
