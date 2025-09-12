@@ -33,10 +33,11 @@ def get_gas_fee(tx_hash):
 
 # === 请求链上转账数据 ===
 def get_asset_transfers(address, max_count=50, page_key=None):
-    # 将数字转换为十六进制
-    max_count_hex = hex(max_count)
+    # 将数字转换为十六进制，平均分配给转入和转出
+    max_count_hex = hex(max_count // 2)
     
-    params = {
+    # 查询转入交易
+    to_params = {
         "fromBlock": "0x0",
         "toBlock": "latest",
         "toAddress": address,
@@ -45,36 +46,74 @@ def get_asset_transfers(address, max_count=50, page_key=None):
         "withMetadata": True
     }
     
-    # 如果有pageKey，添加分页参数
-    if page_key:
-        params["pageKey"] = page_key
+    # 查询转出交易
+    from_params = {
+        "fromBlock": "0x0",
+        "toBlock": "latest",
+        "fromAddress": address,
+        "category": ["external", "internal", "erc20"],
+        "maxCount": max_count_hex,
+        "withMetadata": True
+    }
     
-    payload = {
+    # 如果有pageKey，需要分别处理转入和转出的分页
+    if page_key:
+        # 这里简化处理，如果有pageKey就只查询转入
+        # 实际应用中需要更复杂的分页逻辑
+        to_params["pageKey"] = page_key
+    
+    # 查询转入交易
+    to_payload = {
         "jsonrpc": "2.0",
         "id": 1,
         "method": "alchemy_getAssetTransfers",
-        "params": [params]
+        "params": [to_params]
+    }
+    
+    # 查询转出交易
+    from_payload = {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "alchemy_getAssetTransfers",
+        "params": [from_params]
     }
     
     headers = {"Content-Type": "application/json"}
-    response = requests.post(ALCHEMY_URL, headers=headers, data=json.dumps(payload))
+    
+    # 并行请求转入和转出数据
+    to_response = requests.post(ALCHEMY_URL, headers=headers, data=json.dumps(to_payload))
+    from_response = requests.post(ALCHEMY_URL, headers=headers, data=json.dumps(from_payload))
 
-    if response.status_code == 200:
-        result = response.json().get("result", {})
-        transfers = result.get("transfers", [])
-        next_page_key = result.get("pageKey")
+    all_transfers = []
+    next_page_key = None
+    
+    if to_response.status_code == 200:
+        to_result = to_response.json().get("result", {})
+        to_transfers = to_result.get("transfers", [])
+        all_transfers.extend(to_transfers)
+        if not page_key:  # 只在第一次查询时获取pageKey
+            next_page_key = to_result.get("pageKey")
+    
+    if from_response.status_code == 200:
+        from_result = from_response.json().get("result", {})
+        from_transfers = from_result.get("transfers", [])
+        all_transfers.extend(from_transfers)
+    
+    # 按时间排序（最新的在前）
+    all_transfers.sort(key=lambda x: x.get('metadata', {}).get('blockTimestamp', ''), reverse=True)
+    
+    # 限制返回数量
+    transfers = all_transfers[:max_count]
+    
+    # 获取Gas费用
+    for tx in transfers:
+        gas_fee = get_gas_fee(tx['hash'])
+        tx['gas_fee'] = gas_fee
         
-        for tx in transfers:
-            gas_fee = get_gas_fee(tx['hash'])
-            tx['gas_fee'] = gas_fee
-            
-        return {
-            "transfers": transfers,
-            "pageKey": next_page_key
-        }
-    else:
-        print("❌ Error:", response.text)
-        return {"transfers": [], "pageKey": None}
+    return {
+        "transfers": transfers,
+        "pageKey": next_page_key
+    }
 
 # === 控制台输出转账记录（带方向） ===
 def display_transfers(transfers, address):
