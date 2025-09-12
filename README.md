@@ -9,7 +9,7 @@
   <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge" alt="License"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10%2B-blue?style=for-the-badge" alt="Python"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node.js-18.x-green?style=for-the-badge" alt="Node.js"></a>
-  <a href="https://railway.app/"><img src="https://img.shields.io/badge/deploy-railway-purple?style=for-the-badge" alt="Railway"></a>
+  <a href="https://vercel.com/"><img src="https://img.shields.io/badge/deploy-vercel-black?style=for-the-badge" alt="Vercel"></a>
   <a href="https://flask.palletsprojects.com/"><img src="https://img.shields.io/badge/flask-3.x-lightgrey?style=for-the-badge" alt="Flask"></a>
 </p>
 
@@ -23,22 +23,28 @@
 
 ## ✨ Key Features
 
-- 🔍 **Real-time Transfer Tracking** - Query any Ethereum address to view up to 50 recent transfers
+- 🔍 **Real-time Transfer Tracking** - Query any Ethereum address to view recent transfers with unlimited pagination
 - 📊 **Comprehensive Data** - View transaction time, direction, addresses, value, asset type, and gas fees
-- 📥 **One-Click CSV Export** - Download transfer data for local analysis and archiving
+- 📥 **Smart CSV Export** - Download filtered transfer data (all/received/sent) for local analysis
+- 🔄 **Incremental Loading** - Load more data on-demand without re-fetching existing records
+- 🏷️ **Smart Filtering** - Filter transfers by direction (all/received/sent) with smooth animations
+- 📋 **One-Click Copy** - Copy addresses with a single click and visual feedback
+- 💾 **Smart Caching** - 5-minute local cache to reduce API calls and improve performance
+- 📚 **Query History** - Keep track of recent searches with easy re-query functionality
 - 🌐 **Dual Interface** - Modern web UI and powerful CLI for different use cases
-- 🎨 **Modern Design** - Built with Tailwind CSS featuring dark theme, responsive layout, and interactive animations
+- 🎨 **Modern Design** - Glassmorphism UI with dark theme, responsive layout, and smooth animations
 - 🌍 **Multi-language Support** - Available in English and Chinese with seamless language switching
 - 📱 **Mobile Friendly** - Fully responsive design that works on all devices
 - 🔒 **No Authentication Required** - No wallet connection or user login needed
 - ⚡ **Fast & Reliable** - Powered by Alchemy API for accurate, up-to-date data
 - 🛠️ **Developer Friendly** - REST API endpoints for integration
+- 🎯 **Production Ready** - Optimized for deployment with Vercel and custom domain support
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- **Python** 3.10 or higher
+- **Python** 3.12 or higher
 - **Node.js** 18.x or higher
 - **Alchemy API Key** (Get one at [alchemy.com](https://www.alchemy.com/))
 
@@ -78,6 +84,12 @@ python webapp/app.py
 ```
 
 Visit `http://127.0.0.1:8080` in your browser!
+
+## 🌐 Live Demo
+
+**Try Serchain online**: [serchain.xyz](https://serchain.xyz)
+
+No installation required - just enter an Ethereum address and start exploring!
 
 ## 📁 Project Structure
 
@@ -120,12 +132,20 @@ Serchain/
 4. **View results** in the beautiful table interface with:
    - Transaction direction (Incoming/Outgoing) with visual indicators
    - Timestamp with proper formatting
-   - From/To addresses with copy-friendly display
+   - From/To addresses with one-click copy functionality
    - Value and asset type
    - Gas fees
    - Animated table rows with smooth transitions
 
-5. **Export data** by clicking the download button to get a CSV file
+5. **Filter data** using the smart filter tabs (All/Received/Sent)
+
+6. **Load more data** by clicking "Query More" to fetch additional records
+
+7. **Export data** by clicking the download button to get a filtered CSV file
+
+8. **Copy addresses** by clicking on any address in the table
+
+9. **View history** of your recent queries in the sidebar
 
 ### Command Line Interface
 
@@ -149,6 +169,32 @@ For integration with other applications:
   ```
 
 - **GET** `/download?address=0x1234...` - Download CSV for an address
+- **POST** `/api/load_more` - Load more transfers for an address
+  ```json
+  {
+    "address": "0x1234...",
+    "pageKey": "cursor_string"
+  }
+  ```
+
+## 🆕 Latest Features
+
+### Smart Filtering & Export
+- **Filter by Direction**: View all transfers, only received, or only sent transfers
+- **Smart CSV Export**: Download only the currently filtered data, not all records
+- **Smooth Animations**: Beautiful transitions when switching between filter tabs
+
+### Enhanced User Experience
+- **One-Click Copy**: Click any address to copy it to clipboard with visual feedback
+- **Query History**: Keep track of your last 5 searches with easy re-query
+- **Incremental Loading**: Load more data without re-fetching existing records
+- **Smart Caching**: 5-minute local cache reduces API calls and improves performance
+
+### Production Ready
+- **Vercel Deployment**: Optimized for Vercel with custom domain support
+- **SEO Optimized**: Complete meta tags, favicon, and social media previews
+- **Mobile Responsive**: Perfect experience on all device sizes
+- **Performance Optimized**: Clean code following best practices
 
 ## 📊 Example Output
 
