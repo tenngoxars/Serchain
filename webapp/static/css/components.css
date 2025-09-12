@@ -123,6 +123,11 @@ a.btn, a.btn:hover, a.btn:visited, a.btn:active {
     inset 0 1px 0 rgba(255,255,255,.1);
 }
 
+/* 确保 hidden 类能正确覆盖 btn 的 display 属性 */
+.btn.hidden {
+  display: none !important;
+}
+
 /* 增强的输入框样式 */
 .form-input {
   background: linear-gradient(135deg, 

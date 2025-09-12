@@ -3,6 +3,7 @@ table {
   border-collapse: separate;
   border-spacing: 0;
   width: 100%;
+  min-width: 800px; /* 确保表格有最小宽度，触发水平滚动 */
 }
 th {
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -64,7 +65,8 @@ tr td:first-child {
 /* 表格容器平滑过渡 */
 .table-container {
   transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 /* 表格内容淡入淡出 */

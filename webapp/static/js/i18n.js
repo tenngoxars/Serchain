@@ -13,6 +13,11 @@
       download: "下载 CSV",
       errorPrefix: "❌ 错误：",
       fetchErrorPrefix: "❌ 请求失败：",
+      networkError: "网络连接异常，请检查网络后重试",
+      timeoutError: "请求超时，请稍后重试",
+      apiError: "API 服务异常，请稍后重试",
+      invalidAddressError: "地址格式不正确，请检查后重试",
+      unknownError: "查询失败，请稍后重试",
       historyLabel: "历史查询：",
       clearHistory: "清空历史",
       table: {
@@ -32,6 +37,8 @@
       countWithFilter: (total, filtered, mode) => `共 ${total} 条记录，显示 ${filtered} 条${mode}记录`,
       refreshBtn: "刷新",
       queryTime: "查询时间",
+      noDataMessage: "暂无数据",
+      noDataSubMessage: "请尝试其他筛选条件",
       locale: "zh-CN"
     },
     en: {
@@ -46,6 +53,11 @@
       download: "Download CSV",
       errorPrefix: "❌ Error: ",
       fetchErrorPrefix: "❌ Request failed: ",
+      networkError: "Network connection error, please check your connection and try again",
+      timeoutError: "Request timeout, please try again later",
+      apiError: "API service error, please try again later",
+      invalidAddressError: "Invalid address format, please check and try again",
+      unknownError: "Query failed, please try again later",
       historyLabel: "History:",
       clearHistory: "Clear History",
       table: {
@@ -65,6 +77,8 @@
       countWithFilter: (total, filtered, mode) => `${total} total records, showing ${filtered} ${mode} records`,
       refreshBtn: "Refresh",
       queryTime: "Query Time",
+      noDataMessage: "No Data",
+      noDataSubMessage: "Try different filter options",
       locale: "en-US"
     }
   };

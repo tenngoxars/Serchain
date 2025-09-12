@@ -1,29 +1,73 @@
 (function (root) {
   'use strict';
+  
+  // ============================================================================
+  // 依赖注入
+  // ============================================================================
   const I18N = () => root.Serchain.I18N;
   const API  = () => root.Serchain.API;
   const History = () => root.Serchain.History;
 
+  // ============================================================================
+  // 常量配置
+  // ============================================================================
+  const CONSTANTS = {
+    // 时间相关
+    ANIMATION_DURATION: 300,
+    FADE_IN_DELAY: 10,
+    SUCCESS_TOAST_DELAY: 1500,
+    COPY_TOAST_DELAY: 1000,
+    FADE_OUT_DELAY: 2000,
+    SCROLL_DELAY: 300,
+    QUERY_ANIMATION_DELAY: 300,
+    
+    // 缓存相关
+    CACHE_DURATION: 5 * 60 * 1000, // 5分钟
+    CACHE_MAX_SIZE: 50,
+    
+    // 数据相关
+    INITIAL_COUNT: 10,
+    INCREMENT_COUNT: 10,
+    
+    // 动画相关
+    OPACITY_TRANSITION: "opacity 0.3s ease-in",
+    HEIGHT_TRANSITION: "height 0.3s ease-in-out",
+    FADE_OUT_TRANSITION: "opacity 0.5s ease-out, height 0.5s ease-out, margin 0.5s ease-out"
+  };
+
+  // ============================================================================
+  // 工具函数
+  // ============================================================================
+  function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // ============================================================================
+  // 全局状态
+  // ============================================================================
   let els = {};
   let allTransfers = null; // 存储所有数据
   let filteredTransfers = null; // 存储筛选后的数据
   let currentAddress = "";
-  let currentCount = 10; // 当前查询的数据量
+  let currentCount = CONSTANTS.INITIAL_COUNT; // 当前查询的数据量
   let pageKey = null; // Alchemy 分页的 pageKey
   let currentFilter = "all"; // 当前筛选模式
-  const incrementCount = 10; // 每次增加的条数
+  const incrementCount = CONSTANTS.INCREMENT_COUNT; // 每次增加的条数
 
+  // ============================================================================
   // 缓存系统
+  // ============================================================================
   const CACHE_CONFIG = {
-    duration: 5 * 60 * 1000, // 5分钟缓存
-    maxSize: 50,             // 最多缓存50个地址
-    enableRefresh: true      // 允许手动刷新
+    duration: CONSTANTS.CACHE_DURATION,
+    maxSize: CONSTANTS.CACHE_MAX_SIZE,
+    enableRefresh: true
   };
-  
   const cache = new Map(); // 缓存存储
   let cacheTimestamp = null; // 当前数据的缓存时间
 
+  // ============================================================================
   // 缓存管理函数
+  // ============================================================================
   function getCachedData(address) {
     const cached = cache.get(address);
     if (cached && Date.now() - cached.timestamp < CACHE_CONFIG.duration) {
@@ -35,13 +79,11 @@
   function setCachedData(address, data) {
     // 清理过期缓存
     cleanExpiredCache();
-    
     // 限制缓存大小
     if (cache.size >= CACHE_CONFIG.maxSize) {
       const firstKey = cache.keys().next().value;
       cache.delete(firstKey);
     }
-    
     cache.set(address, {
       data: data,
       timestamp: Date.now()
@@ -61,66 +103,101 @@
     return cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_CONFIG.duration);
   }
 
+  // 格式化时间字符串
+  function formatTimeString(queryTime, locale, isChinese) {
+    if (isChinese) {
+      // 中文：先获取日期时间，再单独获取时区名称
+      const dateTime = queryTime.toLocaleString(locale, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      const timeZoneName = queryTime.toLocaleString(locale, {
+        timeZoneName: 'long'
+      }).split(' ').pop();
+      return `${dateTime} ${timeZoneName}`;
+    } else {
+      // 英文：使用时区缩写，24小时格式
+      return queryTime.toLocaleString(locale, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZoneName: 'short',
+        hour12: false
+      });
+    }
+  }
+
   function updateCacheStatus() {
     const statusEl = document.getElementById('cacheStatus');
-    if (statusEl) {
-      // 如果没有查询过数据，不显示状态
-      if (!allTransfers || !cacheTimestamp) {
-        statusEl.textContent = '';
-        return;
-      }
-      
-      // 显示用户本地时间
-      const queryTime = new Date(cacheTimestamp);
-      const locale = I18N().getLang() === 'zh' ? 'zh-CN' : 'en-US';
-      
-      // 根据语言选择不同的时区显示方式
-      let timeString;
-      if (I18N().getLang() === 'zh') {
-        // 中文：先获取日期时间，再单独获取时区名称
-        const dateTime = queryTime.toLocaleString(locale, {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false
-        });
-        const timeZoneName = queryTime.toLocaleString(locale, {
-          timeZoneName: 'long'
-        }).split(' ').pop();
-        timeString = `${dateTime} ${timeZoneName}`;
-      } else {
-        // 英文：使用时区缩写，24小时格式
-        timeString = queryTime.toLocaleString(locale, {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          timeZoneName: 'short',
-          hour12: false
-        });
-      }
-      
-      statusEl.textContent = `${I18N().DICT[I18N().getLang()].queryTime}: ${timeString}`;
-      statusEl.className = 'text-xs text-blue-300 font-medium';
+    if (!statusEl) return;
+    
+    // 如果没有查询过数据，不显示状态
+    if (!allTransfers || !cacheTimestamp) {
+      statusEl.textContent = '';
+      return;
     }
+    
+    // 显示用户本地时间
+    const queryTime = new Date(cacheTimestamp);
+    const locale = I18N().getLang() === 'zh' ? 'zh-CN' : 'en-US';
+    const isChinese = I18N().getLang() === 'zh';
+    const timeString = formatTimeString(queryTime, locale, isChinese);
+    
+    statusEl.textContent = `${I18N().DICT[I18N().getLang()].queryTime}: ${timeString}`;
+    statusEl.className = 'text-xs text-blue-300 font-medium';
   }
 
   // 显示成功状态
   function showSuccessStatus() {
-    setStatus("success", allTransfers.length);
-    fadeOutStatus(2000);
+    const d = I18N().DICT[I18N().getLang()];
+    const message = d.success(allTransfers.length);
+    
+    // 创建成功提示浮窗
+    const toast = document.createElement('div');
+    toast.className = 'fixed bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300';
+    toast.style.top = '50%';
+    toast.style.left = '50%';
+    toast.style.transform = 'translate(-50%, -50%)';
+    toast.style.position = 'fixed';
+    toast.style.fontSize = '16px';
+    toast.style.fontWeight = '600';
+    toast.style.opacity = '0';
+    toast.style.scale = '0.9';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // 添加淡入效果
+    setTimeout(() => {
+      toast.style.opacity = '1';
+      toast.style.scale = '1';
+    }, CONSTANTS.FADE_IN_DELAY);
+    
+    // 1.5秒后移除提示
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.scale = '0.9';
+      toast.style.transform = 'translate(-50%, -50%) translateY(-10px)';
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, CONSTANTS.ANIMATION_DURATION);
+    }, CONSTANTS.SUCCESS_TOAST_DELAY);
   }
 
   // 显示结果按钮
   function showResultButtons() {
     els.download.textContent = I18N().DICT[I18N().getLang()].download;
-    els.download.classList.remove("hidden");
-    els.loadMoreBtn.classList.remove("hidden");
+    // 使用 updateButtonVisibility 来根据当前筛选状态决定是否显示按钮
+    updateButtonVisibility();
   }
 
   // 更新历史记录
@@ -145,7 +222,7 @@
     setStatus("noMoreData");
     els.loadMoreBtn.disabled = true;
     els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
-    fadeOutStatus(3000);
+    fadeOutStatus(CONSTANTS.FADE_OUT_DELAY + 1000);
   }
 
   // 隐藏加载状态
@@ -157,6 +234,95 @@
   function enableLoadMoreButton() {
     els.loadMoreBtn.disabled = false;
     els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].loadMoreBtn;
+  }
+
+  // 显示无数据提示
+  function showNoDataMessage() {
+    // 移除现有的无数据提示
+    const existingMessage = document.getElementById('noDataMessage');
+    if (existingMessage) {
+      existingMessage.remove();
+    }
+    
+    // 创建无数据提示
+    const messageDiv = document.createElement('div');
+    messageDiv.id = 'noDataMessage';
+    messageDiv.className = 'text-center py-8 text-gray-400';
+    messageDiv.innerHTML = `
+      <div class="text-4xl mb-4">📭</div>
+      <p class="text-lg font-medium">${I18N().DICT[I18N().getLang()].noDataMessage || '暂无数据'}</p>
+      <p class="text-sm mt-2">${I18N().DICT[I18N().getLang()].noDataSubMessage || '请尝试其他筛选条件'}</p>
+    `;
+    
+    // 插入到表格容器的位置
+    const tableContainer = document.querySelector('.table-container');
+    if (tableContainer && tableContainer.parentNode) {
+      tableContainer.parentNode.insertBefore(messageDiv, tableContainer);
+    }
+  }
+
+  // 隐藏无数据提示
+  function hideNoDataMessage() {
+    const messageDiv = document.getElementById('noDataMessage');
+    if (messageDiv) {
+      messageDiv.remove();
+    }
+  }
+
+  // 更新按钮显示状态
+  function updateButtonVisibility() {
+    // 重新筛选数据以确保 filteredTransfers 是最新的
+    filterTransfers();
+    const hasData = filteredTransfers && filteredTransfers.length > 0;
+    
+    // 控制按钮的显示
+    if (hasData) {
+      // 有数据时：显示所有按钮
+      els.download.classList.remove("hidden");
+      els.loadMoreBtn.classList.remove("hidden");
+      if (els.refreshBtn) {
+        els.refreshBtn.classList.remove("hidden");
+      }
+    } else {
+      // 无数据时：只显示刷新按钮，隐藏下载和查询更多按钮
+      els.download.classList.add("hidden");
+      els.loadMoreBtn.classList.add("hidden");
+      if (els.refreshBtn) {
+        els.refreshBtn.classList.remove("hidden"); // 刷新按钮始终显示
+      }
+    }
+  }
+
+  // 将技术错误转换为用户友好的错误信息
+  function getUserFriendlyError(error) {
+    const errorMessage = error.message || String(error);
+    
+    // 网络连接错误
+    if (errorMessage.includes('HTTPSConnectionPool') || 
+        errorMessage.includes('Max retries exceeded') ||
+        errorMessage.includes('SSLError') ||
+        errorMessage.includes('SSL: UNEXPECTED_EOF_WHILE_READING') ||
+        errorMessage.includes('ConnectionError')) {
+      return I18N().DICT[I18N().getLang()].networkError;
+    }
+    
+    // 超时错误
+    if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
+      return I18N().DICT[I18N().getLang()].timeoutError;
+    }
+    
+    // API 错误
+    if (errorMessage.includes('API') || errorMessage.includes('api')) {
+      return I18N().DICT[I18N().getLang()].apiError;
+    }
+    
+    // 地址格式错误
+    if (errorMessage.includes('invalid') || errorMessage.includes('Invalid')) {
+      return I18N().DICT[I18N().getLang()].invalidAddressError;
+    }
+    
+    // 默认错误
+    return I18N().DICT[I18N().getLang()].unknownError;
   }
 
   function cacheDom() {
@@ -177,8 +343,21 @@
       filterAll: document.getElementById("filterAll"),
       filterReceived: document.getElementById("filterReceived"),
       filterSent: document.getElementById("filterSent"),
+      refreshBtn: document.getElementById("refreshBtn"),
       refreshText: document.querySelector('.refresh-text')
     };
+  }
+
+  // 状态提示动画效果
+  async function animateStatusIn() {
+    els.status.style.opacity = "0";
+    els.status.style.transition = `${CONSTANTS.OPACITY_TRANSITION}, ${CONSTANTS.HEIGHT_TRANSITION}`;
+    const currentHeight = els.status.offsetHeight;
+    els.status.style.height = "0px";
+    
+    await delay(CONSTANTS.FADE_IN_DELAY);
+    els.status.style.opacity = "1";
+    els.status.style.height = currentHeight + "px";
   }
 
   function setStatus(key, extra = "") {
@@ -188,13 +367,11 @@
     
     // 添加状态指示器样式
     els.status.className = "text-sm text-center mt-2";
+    
     if (key === "querying") {
       els.status.innerHTML = `<div class="status-indicator status-warning"><div class="loading-spinner"></div>${statusText}</div>`;
     } else if (key === "success") {
       els.status.innerHTML = `<div class="status-indicator status-success">${statusText}</div>`;
-      // 记录当前高度和margin，用于平滑过渡
-      els.status.style.height = els.status.offsetHeight + "px";
-      els.status.style.marginTop = "0.5rem"; // 记录mt-2的值
     } else if (key === "invalidAddress" || key === "fetchErrorPrefix") {
       els.status.innerHTML = `<div class="status-indicator status-error">${statusText}</div>`;
     } else if (key === "noRecords") {
@@ -202,12 +379,22 @@
     } else {
       els.status.innerHTML = statusText;
     }
+    
+    // 应用动画效果
+    animateStatusIn();
+    
+    // 成功状态需要记录高度和margin，用于后续的渐隐动画
+    if (key === "success") {
+      delay(CONSTANTS.FADE_IN_DELAY).then(() => {
+        els.status.style.marginTop = "0.5rem"; // 记录mt-2的值
+      });
+    }
   }
 
   // 状态提示渐隐函数
-  function fadeOutStatus(delay = 2000) {
+  function fadeOutStatus(delay = CONSTANTS.FADE_OUT_DELAY) {
     setTimeout(() => {
-      els.status.style.transition = "opacity 0.5s ease-out, height 0.5s ease-out, margin 0.5s ease-out";
+      els.status.style.transition = CONSTANTS.FADE_OUT_TRANSITION;
       els.status.style.opacity = "0";
       els.status.style.height = "0px"; // 高度过渡到0
       els.status.style.marginTop = "0px"; // margin也过渡到0
@@ -217,19 +404,21 @@
         els.status.style.transition = "";
         els.status.style.height = ""; // 重置高度
         els.status.style.marginTop = ""; // 重置margin
-      }, 500);
+      }, CONSTANTS.ANIMATION_DURATION);
     }, delay);
   }
 
   // 查询中动画渐隐函数
   function fadeOutQuerying() {
-    els.status.style.transition = "opacity 0.3s ease-out";
+    els.status.style.transition = `${CONSTANTS.OPACITY_TRANSITION.replace('ease-in', 'ease-out')}, ${CONSTANTS.HEIGHT_TRANSITION.replace('ease-in-out', 'ease-out')}`;
     els.status.style.opacity = "0";
+    els.status.style.height = "0px";
     setTimeout(() => {
       els.status.innerHTML = "";
       els.status.style.opacity = "1";
+      els.status.style.height = "";
       els.status.style.transition = "";
-    }, 300);
+    }, CONSTANTS.ANIMATION_DURATION);
   }
 
   // 筛选功能
@@ -249,6 +438,7 @@
       // 直接渲染，不使用动画
       renderTable(filteredTransfers, currentAddress);
       updateCount();
+      updateButtonVisibility(); // 更新按钮显示状态
     } else {
       // 平滑过渡效果
       smoothTableTransition();
@@ -257,11 +447,11 @@
 
   // 平滑表格过渡
   function smoothTableTransition() {
-    const tableContainer = document.querySelector('.table-container');
+    const resultContainer = els.result;
     const tbody = els.tbody;
     
     // 记录当前高度
-    const currentHeight = tableContainer.offsetHeight;
+    const currentHeight = resultContainer.offsetHeight;
     
     // 添加淡出效果
     tbody.classList.add('fade-out');
@@ -273,17 +463,21 @@
       // 更新计数
       updateCount();
       
+      // 更新按钮显示状态
+      updateButtonVisibility();
+      
       // 记录新高度
-      const newHeight = tableContainer.offsetHeight;
+      const newHeight = resultContainer.offsetHeight;
       
       // 设置过渡高度
-      tableContainer.style.height = currentHeight + 'px';
+      resultContainer.style.height = currentHeight + 'px';
+      resultContainer.style.transition = 'height 0.3s ease-in-out';
       
       // 强制重排
-      tableContainer.offsetHeight;
+      resultContainer.offsetHeight;
       
       // 过渡到新高度
-      tableContainer.style.height = newHeight + 'px';
+      resultContainer.style.height = newHeight + 'px';
       
       // 添加淡入效果
       tbody.classList.remove('fade-out');
@@ -291,11 +485,12 @@
       
       // 过渡完成后移除高度限制
       setTimeout(() => {
-        tableContainer.style.height = '';
+        resultContainer.style.height = '';
+        resultContainer.style.transition = '';
         tbody.classList.remove('fade-in');
-      }, 400);
+      }, CONSTANTS.ANIMATION_DURATION + 100);
       
-    }, 150);
+      }, CONSTANTS.ANIMATION_DURATION);
   }
 
   function filterTransfers() {
@@ -379,55 +574,124 @@
     document.body.removeChild(textArea);
   }
 
-  // 显示复制成功提示
-  function showCopySuccess() {
-    const d = I18N().DICT[I18N().getLang()];
-    const message = d.copySuccess || "✅ 地址已复制到剪贴板";
-    
-    // 创建临时提示元素
+  // 显示复制提示
+  function showCopyToast(message, isSuccess = true) {
     const toast = document.createElement('div');
-    toast.className = 'fixed bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
-    toast.style.top = '16px';
-    toast.style.left = '16px';
+    toast.className = `fixed ${isSuccess ? 'bg-green-600' : 'bg-red-600'} text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300`;
+    toast.style.top = '20px';
+    toast.style.left = '20px';
     toast.style.position = 'fixed';
+    toast.style.fontSize = '14px';
+    toast.style.fontWeight = '500';
+    toast.style.opacity = '0';
+    toast.style.scale = '0.9';
     toast.textContent = message;
     document.body.appendChild(toast);
     
-    // 2秒后移除提示
+    // 添加淡入效果
+    setTimeout(() => {
+      toast.style.opacity = '1';
+      toast.style.scale = '1';
+    }, CONSTANTS.FADE_IN_DELAY);
+    
+    // 1秒后移除提示
     setTimeout(() => {
       toast.style.opacity = '0';
+      toast.style.scale = '0.9';
+      toast.style.transform = 'translateY(-10px)';
       setTimeout(() => {
         if (toast.parentNode) {
           toast.parentNode.removeChild(toast);
         }
-      }, 300);
-    }, 2000);
+      }, CONSTANTS.ANIMATION_DURATION);
+    }, CONSTANTS.COPY_TOAST_DELAY);
+  }
+
+  // 显示复制成功提示
+  function showCopySuccess() {
+    const d = I18N().DICT[I18N().getLang()];
+    const message = d.copySuccess || "✅ 地址已复制到剪贴板";
+    showCopyToast(message, true);
   }
 
   // 显示复制失败提示
   function showCopyError() {
     const d = I18N().DICT[I18N().getLang()];
     const message = d.copyError || "❌ 复制失败，请手动复制";
-    
-    const toast = document.createElement('div');
-    toast.className = 'fixed bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all duration-300';
-    toast.style.top = '16px';
-    toast.style.left = '16px';
-    toast.style.position = 'fixed';
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      setTimeout(() => {
-        if (toast.parentNode) {
-          toast.parentNode.removeChild(toast);
-        }
-      }, 300);
-    }, 2000);
+    showCopyToast(message, false);
   }
 
   // 查询更多数据
+  // 显示加载更多状态
+  function showLoadMoreStatus() {
+    els.loadMoreBtn.disabled = true;
+    els.loadMoreStatus.classList.remove("hidden");
+    els.loadMoreStatusText.textContent = I18N().DICT[I18N().getLang()].loadingMore;
+  }
+
+  // 处理加载更多成功
+  function handleLoadMoreSuccess(result) {
+    // 合并新数据到现有数据
+    allTransfers = [...allTransfers, ...result.transfers];
+    pageKey = result.pageKey; // 更新 pageKey
+    currentCount = allTransfers.length;
+    
+    // 重新筛选数据（跳过动画，因为是加载更多）
+    filterTransfers();
+    renderTable(filteredTransfers, currentAddress);
+    updateCount();
+
+    // 隐藏加载状态
+    hideLoadMoreStatus();
+    
+    // 更新查询更多按钮状态
+    updateLoadMoreButton();
+    
+    // 自动滚动到查询更多按钮
+    scrollToLoadMoreButton();
+
+    // 如果没有下一页的 pageKey，禁用按钮
+    if (!pageKey) {
+      els.loadMoreBtn.disabled = true;
+      els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
+    } else {
+      // 重新启用按钮
+      enableLoadMoreButton();
+    }
+  }
+
+  // 滚动到加载更多按钮
+  function scrollToLoadMoreButton() {
+    setTimeout(() => {
+      // 滚动到查询更多按钮
+      const loadMoreBtn = els.loadMoreBtn;
+      if (loadMoreBtn && !loadMoreBtn.classList.contains('hidden')) {
+        loadMoreBtn.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'nearest'
+        });
+      } else {
+        // 备用方案：滚动到结果容器底部
+        const resultContainer = els.result;
+        if (resultContainer) {
+          resultContainer.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'end' 
+          });
+        }
+      }
+    }, CONSTANTS.SCROLL_DELAY);
+  }
+
+  // 处理加载更多错误
+  function handleLoadMoreError(e) {
+    const userFriendlyError = getUserFriendlyError(e);
+    setStatus("fetchErrorPrefix", userFriendlyError);
+    hideLoadMoreStatus();
+    enableLoadMoreButton();
+  }
+
   async function loadMoreData() {
     if (!currentAddress) return;
     
@@ -438,9 +702,7 @@
     }
     
     // 显示表格下方的加载状态
-    els.loadMoreBtn.disabled = true;
-    els.loadMoreStatus.classList.remove("hidden");
-    els.loadMoreStatusText.textContent = I18N().DICT[I18N().getLang()].loadingMore;
+    showLoadMoreStatus();
     
     try {
       // 使用 pageKey 查询下一页数据
@@ -451,67 +713,60 @@
         return; 
       }
 
-      // 合并新数据到现有数据
-      allTransfers = [...allTransfers, ...result.transfers];
-      pageKey = result.pageKey; // 更新 pageKey
-      currentCount = allTransfers.length;
-      
-      // 重新筛选数据（跳过动画，因为是加载更多）
-      filterTransfers();
-      renderTable(filteredTransfers, currentAddress);
-      updateCount();
-
-      // 隐藏加载状态
-      hideLoadMoreStatus();
-      
-      // 更新查询更多按钮状态
-      updateLoadMoreButton();
-      
-      // 自动滚动到查询更多按钮
-      setTimeout(() => {
-        // 滚动到查询更多按钮
-        const loadMoreBtn = els.loadMoreBtn;
-        if (loadMoreBtn && !loadMoreBtn.classList.contains('hidden')) {
-          loadMoreBtn.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center',
-            inline: 'nearest'
-          });
-        } else {
-          // 备用方案：滚动到结果容器底部
-          const resultContainer = els.result;
-          if (resultContainer) {
-            resultContainer.scrollIntoView({ 
-              behavior: 'smooth', 
-              block: 'end' 
-            });
-          }
-        }
-      }, 300);
-
-      // 如果没有下一页的 pageKey，禁用按钮
-      if (!pageKey) {
-        els.loadMoreBtn.disabled = true;
-        els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
-      } else {
-        // 重新启用按钮
-        enableLoadMoreButton();
-      }
-
+      handleLoadMoreSuccess(result);
     } catch (e) {
-      setStatus("fetchErrorPrefix", e.message || String(e));
-      hideLoadMoreStatus();
-      enableLoadMoreButton();
+      handleLoadMoreError(e);
     }
+  }
+
+  // 处理无数据情况
+  function handleNoData(tableContainer) {
+    if (tableContainer) {
+      tableContainer.style.display = 'none';
+    }
+    
+    // 无数据时：只显示刷新按钮，隐藏下载和查询更多按钮
+    els.download.classList.add("hidden");
+    els.loadMoreBtn.classList.add("hidden");
+    if (els.refreshBtn) {
+      els.refreshBtn.classList.remove("hidden"); // 刷新按钮始终显示
+    }
+    
+    // 显示无数据提示
+    showNoDataMessage();
+  }
+
+  // 处理有数据情况
+  function handleWithData(tableContainer) {
+    // 显示表格
+    if (tableContainer) {
+      tableContainer.style.display = 'block';
+    }
+    
+    // 隐藏无数据提示
+    hideNoDataMessage();
+    
+    // 更新按钮显示状态
+    updateButtonVisibility();
   }
 
   function renderTable(transfers, address) {
     els.tbody.innerHTML = "";
+    const tableContainer = document.querySelector('.table-container');
+    
+    // 如果没有数据，隐藏整个表格并显示提示
+    if (!transfers || transfers.length === 0) {
+      handleNoData(tableContainer);
+      return;
+    }
+    
+    handleWithData(tableContainer);
+    
     const fmt = I18N().timeFormatter();
     const me = address.toLowerCase();
 
     const frag = document.createDocumentFragment();
-    transfers.slice().reverse().forEach((tx, i) => {
+    transfers.forEach((tx, i) => {
       const dirKey = (tx.to || "").toLowerCase() === me ? "in" : "out";
       const tr = document.createElement("tr");
       tr.className = "table-row";
@@ -524,7 +779,7 @@
       // 计算序号
       const totalIndex = i + 1;
     
-    tr.innerHTML = `
+      tr.innerHTML = `
       <td class="px-4 py-2 text-center font-mono text-sm text-gray-400">${totalIndex}</td>
       <td class="px-4 py-2 text-center hash-mono text-sm">${fmt.format(new Date(tx.time))}</td>
       <td class="px-4 py-2 text-center ${directionClass} font-medium">
@@ -547,53 +802,114 @@
         <span class="bg-blue-900/30 text-blue-300 px-2 py-1 rounded text-xs font-medium">${tx.asset}</span>
       </td>
       <td class="px-4 py-2 text-right font-mono text-sm text-gray-400">${tx.gas_fee || "-"}</td>
-    `;
+      `;
       frag.appendChild(tr);
     });
     els.tbody.appendChild(frag);
   }
 
+  // 处理缓存数据
+  function handleCachedData(cachedData, addr) {
+    allTransfers = cachedData.transfers;
+    pageKey = cachedData.pageKey;
+    currentFilter = "all";
+    cacheTimestamp = cachedData.timestamp;
+    
+    // 显示结果容器
+    els.result.classList.remove("hidden");
+    
+    // 设置默认筛选（跳过动画，因为是缓存数据）
+    setFilter("all", true);
+    
+    // 更新缓存状态
+    updateCacheStatus();
+    
+    // 显示成功状态
+    showSuccessStatus();
+    
+    // 更新查询更多按钮状态
+    updateLoadMoreButton();
+    
+    // 更新历史记录
+    updateHistory(addr);
+  }
+
+  // 处理查询成功
+  function handleQuerySuccess(result, addr) {
+    allTransfers = result.transfers;
+    pageKey = result.pageKey;
+    currentFilter = "all";
+    cacheTimestamp = Date.now();
+    
+    // 保存到缓存
+    setCachedData(addr, {
+      transfers: result.transfers,
+      pageKey: result.pageKey,
+      timestamp: cacheTimestamp
+    });
+    
+    // 先渐隐查询中动画
+    fadeOutQuerying();
+    
+    // 延迟显示结果，让查询中动画先消失
+    setTimeout(() => {
+      // 显示结果容器
+      els.result.classList.remove("hidden");
+      
+      // 设置默认筛选（跳过动画，因为是初始加载）
+      setFilter("all", true);
+      
+      // 更新缓存状态
+      updateCacheStatus();
+      
+      // 显示刷新按钮
+      if (els.refreshBtn) {
+        els.refreshBtn.classList.remove("hidden");
+      }
+      
+      // 显示成功状态
+      showSuccessStatus();
+      
+      // 更新查询更多按钮状态
+      updateLoadMoreButton();
+    }, CONSTANTS.SCROLL_DELAY); // 等待查询中动画消失
+
+    // 更新历史记录
+    updateHistory(addr);
+  }
+
+  // 处理查询错误
+  function handleQueryError(e) {
+    // 先渐隐查询中动画
+    fadeOutQuerying();
+    
+    // 延迟显示错误信息
+    setTimeout(() => {
+      const userFriendlyError = getUserFriendlyError(e);
+      setStatus("fetchErrorPrefix", userFriendlyError);
+    }, CONSTANTS.SCROLL_DELAY);
+  }
+
   async function onSearch(forceRefresh = false) {
     const addr = (els.input.value || "").trim();
-    if (!/^0x[a-fA-F0-9]{40}$/.test(addr)) { setStatus("invalidAddress"); return; }
+    if (!/^0x[a-fA-F0-9]{40}$/.test(addr)) { 
+      setStatus("invalidAddress"); 
+      return; 
+    }
 
     currentAddress = addr;
-    currentCount = 10; // 重置为初始10条
+    currentCount = CONSTANTS.INITIAL_COUNT; // 重置为初始10条
     pageKey = null; // 重置分页键
     
     // 检查缓存
     if (!forceRefresh) {
       const cachedData = getCachedData(addr);
       if (cachedData) {
-        allTransfers = cachedData.transfers;
-        pageKey = cachedData.pageKey;
-        currentFilter = "all";
-        cacheTimestamp = cachedData.timestamp;
-        
-        // 显示结果容器
-        els.result.classList.remove("hidden");
-        
-        // 设置默认筛选（跳过动画，因为是缓存数据）
-        setFilter("all", true);
-        
-        // 更新缓存状态
-        updateCacheStatus();
-        
-        // 显示结果按钮
-        showResultButtons();
-        
-        // 显示成功状态
-        showSuccessStatus();
-        
-        // 更新查询更多按钮状态
-        updateLoadMoreButton();
-        
-        // 更新历史记录
-        updateHistory(addr);
+        handleCachedData(cachedData, addr);
         return;
       }
     }
-    
+
     setStatus("querying");
     els.count.textContent = "";
     els.download.classList.add("hidden");
@@ -606,62 +922,13 @@
         fadeOutQuerying();
         setTimeout(() => {
           setStatus("noRecords");
-        }, 300);
+        }, CONSTANTS.SCROLL_DELAY);
         return; 
       }
 
-      allTransfers = result.transfers;
-      pageKey = result.pageKey; // 保存下一页的 pageKey
-      currentFilter = "all"; // 重置筛选模式
-      cacheTimestamp = Date.now(); // 记录缓存时间
-      
-      // 保存到缓存
-      setCachedData(addr, {
-        transfers: result.transfers,
-        pageKey: result.pageKey,
-        timestamp: cacheTimestamp
-      });
-      
-      // 先渐隐查询中动画
-      fadeOutQuerying();
-      
-      // 延迟显示结果，让查询中动画先消失
-      setTimeout(() => {
-        // 显示结果容器
-        els.result.classList.remove("hidden");
-        
-        // 设置默认筛选（跳过动画，因为是初始加载）
-        setFilter("all", true);
-        
-        // 更新缓存状态
-        updateCacheStatus();
-
-        // 显示结果按钮
-        showResultButtons();
-        
-        // 显示刷新按钮
-        const refreshBtn = document.getElementById('refreshBtn');
-        if (refreshBtn) {
-          refreshBtn.classList.remove("hidden");
-        }
-        
-        // 显示成功状态
-        showSuccessStatus();
-        
-        // 更新查询更多按钮状态
-        updateLoadMoreButton();
-      }, 300); // 等待查询中动画消失
-
-      // 更新历史记录
-      updateHistory(addr);
+      handleQuerySuccess(result, addr);
     } catch (e) {
-      // 先渐隐查询中动画
-      fadeOutQuerying();
-      
-      // 延迟显示错误信息
-      setTimeout(() => {
-        setStatus("fetchErrorPrefix", e.message || String(e));
-      }, 300);
+      handleQueryError(e);
     }
   }
 
@@ -669,9 +936,8 @@
     els.btn.addEventListener("click", onSearch);
     
     // 刷新按钮事件
-    const refreshBtn = document.getElementById('refreshBtn');
-    if (refreshBtn) {
-      refreshBtn.addEventListener("click", () => onSearch(true));
+    if (els.refreshBtn) {
+      els.refreshBtn.addEventListener("click", () => onSearch(true));
     }
     
     els.input.addEventListener("keydown", (e) => { if (e.key === "Enter") onSearch(); });
@@ -698,9 +964,9 @@
     // 下载按钮事件
     els.download.addEventListener("click", async (e) => {
       e.preventDefault();
-      if (allTransfers && currentAddress) {
+      if (filteredTransfers && currentAddress) {
         try {
-          await API().downloadCSV(currentAddress, allTransfers);
+          await API().downloadCSV(currentAddress, filteredTransfers);
         } catch (error) {
           console.error('Download failed:', error);
           setStatus("fetchErrorPrefix", "Download failed");
