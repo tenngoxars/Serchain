@@ -2,8 +2,8 @@
   "name": "serchain",
   "version": "1.0.0",
   "scripts": {
-    "build:css": "tailwindcss -i ./static/css/main.css -o ./static/css/output.css --minify",
-    "watch:css": "tailwindcss -i ./static/css/main.css -o ./static/css/output.css --watch",
+    "build:css": "tailwindcss -i ./static/css/base.css -o ./static/css/output.css --minify",
+    "watch:css": "tailwindcss -i ./static/css/base.css -o ./static/css/output.css --watch",
     "dev": "npm run watch:css"
   },
   "devDependencies": {
