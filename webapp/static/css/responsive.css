@@ -1,0 +1,88 @@
+/* 响应式设计改进 */
+@media (max-width: 768px) {
+  .card {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+  
+  .form-input {
+    font-size: 16px; /* 防止iOS缩放 */
+  }
+  
+  table {
+    font-size: 0.75rem;
+  }
+  
+  .hash-mono {
+    font-size: 0.625rem;
+    word-break: break-all;
+  }
+  
+  /* 移动端地址显示优化 */
+  .table-cell-address {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+  }
+  
+  .btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.8125rem;
+  }
+  
+  .title-glow {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 0.75rem;
+    margin: 0.25rem;
+  }
+  
+  table {
+    font-size: 0.6875rem;
+  }
+  
+  .hash-mono {
+    font-size: 0.5625rem;
+  }
+  
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+  }
+  
+  .title-glow {
+    font-size: 1.75rem;
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  .btn:hover {
+    transform: none;
+  }
+  
+  .card:hover {
+    transform: none;
+  }
+  
+  .form-input:focus {
+    transform: none;
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .card {
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  
+  .btn {
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+}

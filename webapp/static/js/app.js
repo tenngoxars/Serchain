@@ -110,6 +110,55 @@
     }
   }
 
+  // 显示成功状态
+  function showSuccessStatus() {
+    setStatus("success", allTransfers.length);
+    fadeOutStatus(2000);
+  }
+
+  // 显示结果按钮
+  function showResultButtons() {
+    els.download.textContent = I18N().DICT[I18N().getLang()].download;
+    els.download.classList.remove("hidden");
+    els.loadMoreBtn.classList.remove("hidden");
+  }
+
+  // 更新历史记录
+  function updateHistory(addr) {
+    History().add(addr);
+    History().render("historyContainer", (a) => { els.input.value = a; onSearch(); });
+  }
+
+  // 更新查询更多按钮状态
+  function updateLoadMoreButton() {
+    if (pageKey) {
+      els.loadMoreBtn.disabled = false;
+      els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].loadMoreBtn;
+    } else {
+      els.loadMoreBtn.disabled = true;
+      els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
+    }
+  }
+
+  // 处理无更多数据的情况
+  function handleNoMoreData() {
+    setStatus("noMoreData");
+    els.loadMoreBtn.disabled = true;
+    els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
+    fadeOutStatus(3000);
+  }
+
+  // 隐藏加载状态
+  function hideLoadMoreStatus() {
+    els.loadMoreStatus.classList.add("hidden");
+  }
+
+  // 启用查询更多按钮
+  function enableLoadMoreButton() {
+    els.loadMoreBtn.disabled = false;
+    els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].loadMoreBtn;
+  }
+
   function cacheDom() {
     els = {
       input: document.getElementById("addressInput"),
@@ -127,7 +176,8 @@
       loadMoreStatusText: document.getElementById("loadMoreStatusText"),
       filterAll: document.getElementById("filterAll"),
       filterReceived: document.getElementById("filterReceived"),
-      filterSent: document.getElementById("filterSent")
+      filterSent: document.getElementById("filterSent"),
+      refreshText: document.querySelector('.refresh-text')
     };
   }
 
@@ -383,10 +433,7 @@
     
     // 如果没有 pageKey，说明已经查完所有数据
     if (!pageKey) {
-      setStatus("noMoreData");
-      els.loadMoreBtn.disabled = true;
-      els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
-      fadeOutStatus(3000);
+      handleNoMoreData();
       return;
     }
     
@@ -399,11 +446,8 @@
       // 使用 pageKey 查询下一页数据
       const result = await API().fetchTransfers(currentAddress, incrementCount, pageKey);
       if (!result.transfers.length) { 
-        setStatus("noMoreData");
-        els.loadMoreBtn.disabled = true;
-        els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
-        els.loadMoreStatus.classList.add("hidden");
-        fadeOutStatus(3000);
+        hideLoadMoreStatus();
+        handleNoMoreData();
         return; 
       }
 
@@ -418,7 +462,10 @@
       updateCount();
 
       // 隐藏加载状态
-      els.loadMoreStatus.classList.add("hidden");
+      hideLoadMoreStatus();
+      
+      // 更新查询更多按钮状态
+      updateLoadMoreButton();
       
       // 自动滚动到查询更多按钮
       setTimeout(() => {
@@ -448,14 +495,13 @@
         els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
       } else {
         // 重新启用按钮
-        els.loadMoreBtn.disabled = false;
-        els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].loadMoreBtn;
+        enableLoadMoreButton();
       }
 
     } catch (e) {
       setStatus("fetchErrorPrefix", e.message || String(e));
-      els.loadMoreStatus.classList.add("hidden");
-      els.loadMoreBtn.disabled = false;
+      hideLoadMoreStatus();
+      enableLoadMoreButton();
     }
   }
 
@@ -533,25 +579,17 @@
         // 更新缓存状态
         updateCacheStatus();
         
-        els.download.textContent = I18N().DICT[I18N().getLang()].download;
-        els.download.classList.remove("hidden");
-        els.loadMoreBtn.classList.remove("hidden");
+        // 显示结果按钮
+        showResultButtons();
         
         // 显示成功状态
-        setStatus("success", allTransfers.length);
-        fadeOutStatus(2000);
+        showSuccessStatus();
         
-        // 重置查询更多按钮状态
-        if (pageKey) {
-          els.loadMoreBtn.disabled = false;
-          els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].loadMoreBtn;
-        } else {
-          els.loadMoreBtn.disabled = true;
-          els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
-        }
+        // 更新查询更多按钮状态
+        updateLoadMoreButton();
         
-        History().add(addr);
-        History().render("historyContainer", (a) => { els.input.value = a; onSearch(); });
+        // 更新历史记录
+        updateHistory(addr);
         return;
       }
     }
@@ -598,9 +636,8 @@
         // 更新缓存状态
         updateCacheStatus();
 
-        els.download.textContent = I18N().DICT[I18N().getLang()].download;
-        els.download.classList.remove("hidden");
-        els.loadMoreBtn.classList.remove("hidden");
+        // 显示结果按钮
+        showResultButtons();
         
         // 显示刷新按钮
         const refreshBtn = document.getElementById('refreshBtn');
@@ -609,22 +646,14 @@
         }
         
         // 显示成功状态
-        setStatus("success", allTransfers.length);
-        fadeOutStatus(2000);
+        showSuccessStatus();
         
-        // 重置查询更多按钮状态
-        if (pageKey) {
-          els.loadMoreBtn.disabled = false;
-          els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].loadMoreBtn;
-        } else {
-          // 如果没有 pageKey，说明数据不足10条或已查完
-          els.loadMoreBtn.disabled = true;
-          els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].noMoreData;
-        }
+        // 更新查询更多按钮状态
+        updateLoadMoreButton();
       }, 300); // 等待查询中动画消失
 
-      History().add(addr);
-      History().render("historyContainer", (a) => { els.input.value = a; onSearch(); });
+      // 更新历史记录
+      updateHistory(addr);
     } catch (e) {
       // 先渐隐查询中动画
       fadeOutQuerying();
@@ -724,9 +753,8 @@
     }
     
     // 更新刷新按钮文本
-    const refreshText = document.querySelector('.refresh-text');
-    if (refreshText) {
-      refreshText.textContent = I18N().DICT[I18N().getLang()].refreshBtn;
+    if (els.refreshText) {
+      els.refreshText.textContent = I18N().DICT[I18N().getLang()].refreshBtn;
     }
   }
 
@@ -751,8 +779,8 @@
       // 更新缓存状态显示
       updateCacheStatus();
       
+      // 更新按钮文本
       els.download.textContent = I18N().DICT[I18N().getLang()].download;
-      // 只有在按钮未禁用时才更新文本
       if (!els.loadMoreBtn.disabled) {
         els.loadMoreBtn.textContent = I18N().DICT[I18N().getLang()].loadMoreBtn;
       }

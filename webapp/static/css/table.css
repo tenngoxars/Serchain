@@ -1,0 +1,103 @@
+/* 表格样式 */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+th {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.08);
+}
+td {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+/* 新增美化表格内容样式 */
+thead {
+  background: rgba(255, 255, 255, 0.12);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #cfcfd2;
+}
+
+tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.015);
+}
+tbody tr:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+td, th {
+  vertical-align: middle;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+td.text-right, th.text-right {
+  text-align: right;
+}
+td.text-center, th.text-center {
+  text-align: center;
+}
+
+tr td:first-child {
+  color: #a3a3a3;
+}
+
+.direction-out {
+  color: #f87171;
+}
+.direction-in {
+  color: #4ade80;
+}
+
+.hash-mono {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.03em;
+}
+
+/* 表格容器平滑过渡 */
+.table-container {
+  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+/* 表格内容淡入淡出 */
+.table-content {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.table-content.fade-out {
+  opacity: 0;
+}
+
+.table-content.fade-in {
+  opacity: 1;
+}
+
+/* 表格行动画 */
+.table-row {
+  animation: slideInUp 0.3s ease-out;
+  transition: all 0.2s ease;
+}
+
+.table-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(4px);
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

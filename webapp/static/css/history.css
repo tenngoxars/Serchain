@@ -1,0 +1,28 @@
+/* 历史记录样式 */
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  color: #ffffff;
+  font-size: 0.75rem;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s ease;
+}
+.history-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.history-close {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #f87171;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+.history-close:hover {
+  color: #ffffff;
+}

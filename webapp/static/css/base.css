@@ -1,0 +1,36 @@
+/* 基础样式 */
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background: linear-gradient(135deg, #0b0b10 0%, #1a0b2e 50%, #16213e 100%);
+  color: #e7e7ea;
+  min-height: 100vh;
+}
+
+/* 网格细节覆盖 (不添加额外背景，只统一层次感) */
+.grid-noise:before {
+  content:"";
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, rgba(0,0,0,.6), transparent 60%);
+  pointer-events: none;
+}
+
+/* 标题动画 */
+.title-glow {
+  background: linear-gradient(135deg, #ffffff, #e0e7ff, #c7d2fe);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 3s ease infinite;
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
