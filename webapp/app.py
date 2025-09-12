@@ -124,7 +124,22 @@ def api_query():
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+# Sitemap路由
+@app.route('/sitemap.xml')
+def sitemap():
+    return render_template('sitemap.xml'), 200, {'Content-Type': 'application/xml'}
+
+# Robots.txt路由
+@app.route('/robots.txt')
+def robots():
+    return send_file('static/robots.txt', mimetype='text/plain')
+
+# 404错误处理
+@app.errorhandler(404)
+def not_found(error):
+    return render_template('404.html'), 404
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)

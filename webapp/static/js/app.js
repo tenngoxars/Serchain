@@ -42,6 +42,22 @@
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  // 格式化地址显示（移动端显示前4位+后4位）
+  function formatAddress(address) {
+    if (!address) return "";
+    
+    // 检查是否为移动端
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+      // 移动端显示前4位+后4位
+      return `${address.slice(0, 4)}...${address.slice(-4)}`;
+    } else {
+      // 桌面端显示完整地址
+      return address;
+    }
+  }
+
   // ============================================================================
   // 全局状态
   // ============================================================================
@@ -790,12 +806,12 @@
       <td class="px-4 py-2 whitespace-nowrap hash-mono text-xs">
         <span class="bg-gray-800 px-2 py-1 rounded text-gray-300 table-cell-address cursor-pointer hover:bg-gray-700 transition-colors" 
               title="点击复制地址: ${tx.from}" 
-              onclick="copyToClipboard('${tx.from}')">${tx.from}</span>
+              onclick="copyToClipboard('${tx.from}')">${formatAddress(tx.from)}</span>
       </td>
       <td class="px-4 py-2 whitespace-nowrap hash-mono text-xs">
         <span class="bg-gray-800 px-2 py-1 rounded text-gray-300 table-cell-address cursor-pointer hover:bg-gray-700 transition-colors" 
               title="点击复制地址: ${tx.to}" 
-              onclick="copyToClipboard('${tx.to}')">${tx.to}</span>
+              onclick="copyToClipboard('${tx.to}')">${formatAddress(tx.to)}</span>
       </td>
       <td class="px-4 py-2 text-right font-mono font-semibold">${formatValue(tx.value)}</td>
       <td class="px-4 py-2 text-center">
@@ -1006,6 +1022,13 @@
     
     // 初始化标签按钮文本
     updateFilterButtonTexts();
+    
+    // 监听窗口大小变化，重新渲染表格
+    window.addEventListener('resize', () => {
+      if (allTransfers && currentAddress) {
+        renderTable();
+      }
+    });
     
     // 初始化缓存状态显示
     updateCacheStatus();

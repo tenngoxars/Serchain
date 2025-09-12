@@ -23,22 +23,16 @@
 
 ## ✨ Key Features
 
-- 🔍 **Real-time Transfer Tracking** - Query any Ethereum address to view recent transfers with unlimited pagination
-- 📊 **Comprehensive Data** - View transaction time, direction, addresses, value, asset type, and gas fees
-- 📥 **Smart CSV Export** - Download filtered transfer data (all/received/sent) for local analysis
-- 🔄 **Incremental Loading** - Load more data on-demand without re-fetching existing records
-- 🏷️ **Smart Filtering** - Filter transfers by direction (all/received/sent) with smooth animations
-- 📋 **One-Click Copy** - Copy addresses with a single click and visual feedback
-- 💾 **Smart Caching** - 5-minute local cache to reduce API calls and improve performance
-- 📚 **Query History** - Keep track of recent searches with easy re-query functionality
-- 🌐 **Dual Interface** - Modern web UI and powerful CLI for different use cases
-- 🎨 **Modern Design** - Glassmorphism UI with dark theme, responsive layout, and smooth animations
-- 🌍 **Multi-language Support** - Available in English and Chinese with seamless language switching
-- 📱 **Mobile Friendly** - Fully responsive design that works on all devices
+- 🔍 **Real-time Transfer Tracking** - Query any Ethereum address to view recent transfers
+- 📊 **Comprehensive Data** - View transaction time, direction, addresses, value, and gas fees
+- 📥 **Smart CSV Export** - Download filtered transfer data for local analysis
+- 🏷️ **Smart Filtering** - Filter transfers by direction (all/received/sent)
+- 📋 **One-Click Copy** - Copy addresses with a single click
+- 🌐 **Dual Interface** - Modern web UI and powerful CLI
+- 🎨 **Modern Design** - Glassmorphism UI with dark theme and smooth animations
+- 🌍 **Multi-language Support** - Available in English and Chinese
+- 📱 **Mobile Friendly** - Fully responsive design
 - 🔒 **No Authentication Required** - No wallet connection or user login needed
-- ⚡ **Fast & Reliable** - Powered by Alchemy API for accurate, up-to-date data
-- 🛠️ **Developer Friendly** - REST API endpoints for integration
-- 🎯 **Production Ready** - Optimized for deployment with Vercel and custom domain support
 
 ## 🚀 Quick Start
 
@@ -177,25 +171,6 @@ For integration with other applications:
   }
   ```
 
-## 🆕 Latest Features
-
-### Smart Filtering & Export
-- **Filter by Direction**: View all transfers, only received, or only sent transfers
-- **Smart CSV Export**: Download only the currently filtered data, not all records
-- **Smooth Animations**: Beautiful transitions when switching between filter tabs
-
-### Enhanced User Experience
-- **One-Click Copy**: Click any address to copy it to clipboard with visual feedback
-- **Query History**: Keep track of your last 5 searches with easy re-query
-- **Incremental Loading**: Load more data without re-fetching existing records
-- **Smart Caching**: 5-minute local cache reduces API calls and improves performance
-
-### Production Ready
-- **Vercel Deployment**: Optimized for Vercel with custom domain support
-- **SEO Optimized**: Complete meta tags, favicon, and social media previews
-- **Mobile Responsive**: Perfect experience on all device sizes
-- **Performance Optimized**: Clean code following best practices
-
 ## 📊 Example Output
 
 ### CLI Example
@@ -245,88 +220,14 @@ The web interface displays the same data in a beautiful, sortable table with:
 
 ## 🚀 Deployment
 
-### Railway (Recommended)
+### Vercel (Recommended)
 
-1. **Connect your repository** to Railway
+1. **Connect your repository** to Vercel
 2. **Set environment variables**:
    - `ALCHEMY_API_KEY`: Your Alchemy API key
-3. **Configure build settings**:
-   - **Build Command**:
-     ```bash
-     pip install -r requirements.txt && cd webapp && npm ci --no-audit --no-fund && npm run build:css
-     ```
-   - **Start Command**:
-     ```bash
-     gunicorn -w 2 -k gthread -b 0.0.0.0:$PORT webapp.app:app
-     ```
-4. **Deploy** and monitor logs
-
-### Other Platforms
-
-The application can be deployed on any platform that supports Python and Node.js:
-
-- **Heroku**: Use the included `Procfile`
-- **Docker**: Create a Dockerfile with multi-stage build
-- **VPS**: Direct deployment with nginx + gunicorn
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-| Issue | Solution |
-|-------|----------|
-| **Web app not starting** | Check Python/Node.js versions and ensure all dependencies are installed |
-| **CSS styles missing** | Run `npm run build:css` in the `webapp` directory |
-| **API errors** | Verify your Alchemy API key is correct and has sufficient quota |
-| **No data returned** | Check if the address is valid and has recent transactions |
-| **CSV download fails** | Ensure the `data/` directory exists and is writable |
-
-### Development
-
-For development with live CSS updates:
-
-```bash
-cd webapp
-npm run watch:css
-```
-
-This will watch for changes in `main.css` and automatically rebuild `output.css`.
-
-## 🤝 Contributing
-
-We welcome contributions! Here's how you can help:
-
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Commit your changes**: `git commit -m 'Add amazing feature'`
-4. **Push to the branch**: `git push origin feature/amazing-feature`
-5. **Open a Pull Request**
-
-### Development Setup
-
-```bash
-# Install development dependencies
-pip install -r requirements.txt
-cd webapp && npm install
-
-# Run in development mode
-npm run watch:css  # Terminal 1
-python webapp/app.py  # Terminal 2
-```
+3. **Deploy** - Vercel will automatically detect and configure the Python/Node.js build
+4. **Add custom domain** (optional) in Vercel project settings
 
 ## 📄 License
 
 This project is licensed under the Apache-2.0 License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Alchemy](https://www.alchemy.com/) for providing reliable Ethereum API access
-- [Tailwind CSS](https://tailwindcss.com/) for the beautiful styling framework
-- [Flask](https://flask.palletsprojects.com/) for the lightweight web framework
-
----
-
-<div align="center">
-  <p>Made with ❤️ by <a href="https://github.com/tenngoxars">LemonBrandy</a></p>
-  <p>⭐ Star this repo if you found it helpful!</p>
-</div>

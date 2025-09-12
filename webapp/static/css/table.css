@@ -3,7 +3,7 @@ table {
   border-collapse: separate;
   border-spacing: 0;
   width: 100%;
-  min-width: 800px; /* 确保表格有最小宽度，触发水平滚动 */
+  min-width: 900px; /* 确保表格有最小宽度，触发水平滚动 */
 }
 th {
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -41,6 +41,13 @@ td, th {
 
 td.text-right, th.text-right {
   text-align: right;
+}
+
+/* 金额列特殊样式 - 防止数字被截断 */
+td:nth-child(6), th:nth-child(6) {
+  min-width: 80px;
+  white-space: nowrap;
+  padding-right: 1rem;
 }
 td.text-center, th.text-center {
   text-align: center;

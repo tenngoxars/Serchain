@@ -7,7 +7,7 @@
 
 <p align="center">
   <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge" alt="License"></a>
-  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10%2B-blue?style=for-the-badge" alt="Python"></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.12%2B-blue?style=for-the-badge" alt="Python"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node.js-18.x-green?style=for-the-badge" alt="Node.js"></a>
   <a href="https://vercel.com/"><img src="https://img.shields.io/badge/deploy-vercel-black?style=for-the-badge" alt="Vercel"></a>
   <a href="https://flask.palletsprojects.com/"><img src="https://img.shields.io/badge/flask-3.x-lightgrey?style=for-the-badge" alt="Flask"></a>
@@ -23,22 +23,16 @@
 
 ## ✨ 核心功能
 
-- 🔍 **实时转账跟踪** - 查询任意以太坊地址查看转账记录，支持无限分页加载
-- 📊 **全面数据展示** - 查看交易时间、方向、地址、金额、资产类型和手续费
-- 📥 **智能 CSV 导出** - 下载筛选后的转账数据（全部/转入/转出）用于本地分析
-- 🔄 **增量加载** - 按需加载更多数据，无需重新获取已有记录
-- 🏷️ **智能筛选** - 按方向筛选转账记录（全部/转入/转出），带动画效果
-- 📋 **一键复制** - 点击地址即可复制，带视觉反馈
-- 💾 **智能缓存** - 5分钟本地缓存，减少API调用，提升性能
-- 📚 **查询历史** - 记录最近搜索，支持快速重新查询
+- 🔍 **实时转账跟踪** - 查询任意以太坊地址查看转账记录
+- 📊 **全面数据展示** - 查看交易时间、方向、地址、金额和手续费
+- 📥 **智能 CSV 导出** - 下载筛选后的转账数据用于本地分析
+- 🏷️ **智能筛选** - 按方向筛选转账记录（全部/转入/转出）
+- 📋 **一键复制** - 点击地址即可复制
 - 🌐 **双重界面** - 现代化网页界面和强大的命令行工具
-- 🎨 **现代设计** - 玻璃拟态UI，深色主题，响应式布局，流畅动画
-- 🌍 **多语言支持** - 支持中文和英文界面，无缝语言切换
-- 📱 **移动端友好** - 完全响应式设计，适配所有设备
+- 🎨 **现代设计** - 玻璃拟态UI，深色主题，流畅动画
+- 🌍 **多语言支持** - 支持中文和英文界面
+- 📱 **移动端友好** - 完全响应式设计
 - 🔒 **无需认证** - 无需连接钱包或用户登录
-- ⚡ **快速可靠** - 基于 Alchemy API 提供准确、实时的数据
-- 🛠️ **开发者友好** - 提供 REST API 接口便于集成
-- 🎯 **生产就绪** - 针对Vercel部署和自定义域名优化
 
 ## 🚀 快速开始
 
@@ -68,10 +62,10 @@ npm install
 在项目根目录创建 `.env` 文件：
 
 ```env
-ALCHEMY_API_KEY=你的API密钥
+ALCHEMY_API_KEY=your-api-key-here
 ```
 
-> ⚠️ **重要**：请勿将 `.env` 文件提交到版本控制。
+> ⚠️ **重要**: 永远不要将 `.env` 文件提交到版本控制。
 
 ### 3. 构建并运行
 
@@ -97,22 +91,33 @@ python webapp/app.py
 Serchain/
 ├── webapp/                    # 网页应用
 │   ├── templates/
-│   │   └── index.html         # 主 HTML 模板
+│   │   ├── index.html         # 主 HTML 模板
+│   │   ├── 404.html           # 404 错误页面
+│   │   └── sitemap.xml        # 网站地图
 │   ├── static/                # 静态资源
 │   │   ├── css/
-│   │   │   ├── main.css       # Tailwind 源文件
+│   │   │   ├── base.css       # Tailwind 源文件
+│   │   │   ├── components.css # 组件样式
+│   │   │   ├── table.css      # 表格样式
+│   │   │   ├── tabs.css       # 标签样式
+│   │   │   ├── animations.css # 动画样式
+│   │   │   ├── responsive.css # 响应式样式
+│   │   │   ├── history.css    # 历史记录样式
 │   │   │   └── output.css     # 编译后的 CSS
-│   │   └── js/                # JavaScript 模块
-│   │       ├── app.js         # 主应用逻辑
-│   │       ├── api.js         # API 通信
-│   │       ├── history.js     # 查询历史
-│   │       └── i18n.js        # 国际化
+│   │   ├── js/                # JavaScript 模块
+│   │   │   ├── app.js         # 主应用逻辑
+│   │   │   ├── api.js         # API 通信
+│   │   │   ├── history.js     # 查询历史
+│   │   │   └── i18n.js        # 国际化
+│   │   ├── favicon-*.png      # 网站图标
+│   │   └── robots.txt         # 搜索引擎规则
 │   ├── app.py                 # Flask 后端
 │   └── package.json           # Node.js 依赖
 ├── data/                      # CSV 导出目录
 ├── serchain.py                # CLI 应用
 ├── requirements.txt           # Python 依赖
-├── Procfile                   # Railway 部署配置
+├── runtime.txt                # Python 版本
+├── vercel.json                # Vercel 部署配置
 └── .env                       # 环境变量
 ```
 
@@ -177,25 +182,6 @@ CLI 会提示输入以太坊地址，在终端显示结果，并自动保存到 
   }
   ```
 
-## 🆕 最新功能
-
-### 智能筛选与导出
-- **按方向筛选**: 查看全部转账、仅转入或仅转出记录
-- **智能 CSV 导出**: 只下载当前筛选的数据，而非全部记录
-- **流畅动画**: 切换筛选标签时的优美过渡效果
-
-### 增强用户体验
-- **一键复制**: 点击任意地址即可复制到剪贴板，带视觉反馈
-- **查询历史**: 记录最近5次搜索，支持快速重新查询
-- **增量加载**: 加载更多数据而无需重新获取已有记录
-- **智能缓存**: 5分钟本地缓存减少API调用，提升性能
-
-### 生产就绪
-- **Vercel 部署**: 针对Vercel优化，支持自定义域名
-- **SEO 优化**: 完整的meta标签、favicon和社交媒体预览
-- **移动端响应**: 在所有设备尺寸上都有完美体验
-- **性能优化**: 遵循最佳实践的清洁代码
-
 ## 📊 示例输出
 
 ### CLI 示例
@@ -235,9 +221,10 @@ python serchain.py
 ### 网页界面
 
 网页界面以美观、可排序的表格形式显示相同数据，包含：
-- 实时搜索和过滤
+
+- 实时搜索和筛选
 - 移动设备响应式设计
-- 深色主题现代样式和交互动画
+- 深色主题，现代样式和交互动画
 - 一键 CSV 导出
 - 查询历史跟踪
 - 动态背景效果和流畅过渡
@@ -245,88 +232,14 @@ python serchain.py
 
 ## 🚀 部署
 
-### Railway（推荐）
+### Vercel（推荐）
 
-1. **连接仓库** 到 Railway
+1. **连接仓库** 到 Vercel
 2. **设置环境变量**：
    - `ALCHEMY_API_KEY`: 你的 Alchemy API 密钥
-3. **配置构建设置**：
-   - **构建命令**：
-     ```bash
-     pip install -r requirements.txt && cd webapp && npm ci --no-audit --no-fund && npm run build:css
-     ```
-   - **启动命令**：
-     ```bash
-     gunicorn -w 2 -k gthread -b 0.0.0.0:$PORT webapp.app:app
-     ```
-4. **部署** 并监控日志
-
-### 其他平台
-
-应用可部署在任何支持 Python 和 Node.js 的平台上：
-
-- **Heroku**: 使用包含的 `Procfile`
-- **Docker**: 创建多阶段构建的 Dockerfile
-- **VPS**: 使用 nginx + gunicorn 直接部署
-
-## 🔧 故障排查
-
-### 常见问题
-
-| 问题 | 解决方案 |
-|------|----------|
-| **网页应用无法启动** | 检查 Python/Node.js 版本，确保所有依赖已正确安装 |
-| **CSS 样式缺失** | 在 `webapp` 目录运行 `npm run build:css` |
-| **API 错误** | 验证 Alchemy API 密钥是否正确且有足够配额 |
-| **无数据返回** | 检查地址是否有效且有最近交易 |
-| **CSV 下载失败** | 确保 `data/` 目录存在且可写 |
-
-### 开发
-
-开发时使用实时 CSS 更新：
-
-```bash
-cd webapp
-npm run watch:css
-```
-
-这将监听 `main.css` 的变化并自动重新构建 `output.css`。
-
-## 🤝 贡献
-
-我们欢迎贡献！以下是参与方式：
-
-1. **Fork 仓库**
-2. **创建功能分支**：`git checkout -b feature/amazing-feature`
-3. **提交更改**：`git commit -m '添加新功能'`
-4. **推送分支**：`git push origin feature/amazing-feature`
-5. **创建 Pull Request**
-
-### 开发环境
-
-```bash
-# 安装开发依赖
-pip install -r requirements.txt
-cd webapp && npm install
-
-# 开发模式运行
-npm run watch:css  # 终端 1
-python webapp/app.py  # 终端 2
-```
+3. **部署** - Vercel 会自动检测并配置 Python/Node.js 构建
+4. **添加自定义域名**（可选）在 Vercel 项目设置中
 
 ## 📄 许可证
 
 本项目采用 Apache-2.0 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
-## 🙏 致谢
-
-- [Alchemy](https://www.alchemy.com/) 提供可靠的以太坊 API 访问
-- [Tailwind CSS](https://tailwindcss.com/) 提供美观的样式框架
-- [Flask](https://flask.palletsprojects.com/) 提供轻量级 Web 框架
-
----
-
-<div align="center">
-  <p>由 <a href="https://github.com/tenngoxars">LemonBrandy</a> 用 ❤️ 制作</p>
-  <p>⭐ 如果这个项目对你有帮助，请给它一个星标！</p>
-</div>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>页面未找到 - Serchain</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="页面未找到 - Serchain 链上追踪器">
+  <meta name="robots" content="noindex, nofollow">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
+  <link rel="apple-touch-icon" sizes="192x192" href="{{ url_for('static', filename='favicon-192x192.png') }}">
+  <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='favicon-512x512.png') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.png') }}">
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}?v=2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}?v=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}?v=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tabs.css') }}?v=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}?v=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}?v=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/history.css') }}?v=1">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap">
+</head>
+<body id="vanta-bg" class="grid-noise min-h-screen flex items-center justify-center p-6 relative">
+  <div class="absolute top-4 right-4 flex gap-3 items-stretch" style="z-index: 10000;">
+    <button id="langZh" class="px-3 py-2 text-sm font-medium text-white bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-300 active">中文</button>
+    <button id="langEn" class="px-3 py-2 text-sm font-medium text-white bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-300">English</button>
+  </div>
+
+  <div class="w-full max-w-4xl mx-auto">
+    <div class="glass-card p-8 text-center">
+      <!-- 404 Icon -->
+      <div class="mb-8">
+        <div class="text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-4">
+          404
+        </div>
+        <div class="text-2xl font-semibold text-white/90 mb-2" data-i18n="404.title">页面未找到</div>
+        <div class="text-white/70" data-i18n="404.subtitle">抱歉，您访问的页面不存在</div>
+      </div>
+
+      <!-- Error Message -->
+      <div class="mb-8">
+        <p class="text-white/80 mb-4" data-i18n="404.message">
+          您访问的页面可能已被删除、重命名或暂时不可用。
+        </p>
+        <p class="text-white/60 text-sm" data-i18n="404.suggestion">
+          请检查URL是否正确，或返回首页重新开始。
+        </p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <a href="/" class="btn btn-primary" style="width: fit-content; padding: 0.5rem 1rem; font-size: 0.875rem;" data-i18n="404.home">返回首页</a>
+        <button onclick="history.back()" class="btn btn-secondary" style="width: fit-content; padding: 0.5rem 1rem; font-size: 0.875rem;" data-i18n="404.back">返回上页</button>
+      </div>
+
+      <!-- Help Text -->
+      <div class="mt-8 text-white/50 text-sm">
+        <p data-i18n="404.help">如果您认为这是一个错误，请</p>
+        <a href="https://github.com/tenngoxars/Serchain" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:text-purple-300 underline transition-colors duration-200" data-i18n="404.contact">联系我们</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="{{ url_for('static', filename='js/i18n.js') }}?v=1"></script>
+  <script>
+    // 404页面国际化
+    const i18nData = {
+      zh: {
+        "404.title": "页面未找到",
+        "404.subtitle": "抱歉，您访问的页面不存在",
+        "404.message": "您访问的页面可能已被删除、重命名或暂时不可用。",
+        "404.suggestion": "请检查URL是否正确，或返回首页重新开始。",
+        "404.home": "返回首页",
+        "404.back": "返回上页",
+        "404.help": "如果您认为这是一个错误，请",
+        "404.contact": "联系我们"
+      },
+      en: {
+        "404.title": "Page Not Found",
+        "404.subtitle": "Sorry, the page you're looking for doesn't exist",
+        "404.message": "The page you're looking for may have been deleted, renamed, or is temporarily unavailable.",
+        "404.suggestion": "Please check if the URL is correct, or return to the homepage to start over.",
+        "404.home": "Go Home",
+        "404.back": "Go Back",
+        "404.help": "If you believe this is an error, please ",
+        "404.contact": "contact us"
+      }
+    };
+
+    // 简单的国际化函数
+    function updateLanguage(lang) {
+      const elements = document.querySelectorAll('[data-i18n]');
+      elements.forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18nData[lang] && i18nData[lang][key]) {
+          el.textContent = i18nData[lang][key];
+        }
+      });
+    }
+
+    // 语言切换
+    document.getElementById('langZh').addEventListener('click', () => {
+      updateLanguage('zh');
+      document.getElementById('langZh').classList.add('active');
+      document.getElementById('langEn').classList.remove('active');
+    });
+
+    document.getElementById('langEn').addEventListener('click', () => {
+      updateLanguage('en');
+      document.getElementById('langEn').classList.add('active');
+      document.getElementById('langZh').classList.remove('active');
+    });
+
+    // 初始化中文
+    updateLanguage('zh');
+  </script>
+</body>
+</html>
