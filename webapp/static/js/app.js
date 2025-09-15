@@ -769,8 +769,15 @@
     els.tbody.innerHTML = "";
     const tableContainer = document.querySelector('.table-container');
     
-    // 如果没有数据，隐藏整个表格并显示提示
+    // 调试信息
     if (!transfers || transfers.length === 0) {
+      console.log('renderTable: No data detected', {
+        transfers: transfers,
+        transfersLength: transfers?.length,
+        allTransfers: allTransfers?.length,
+        filteredTransfers: filteredTransfers?.length,
+        currentAddress: currentAddress
+      });
       handleNoData(tableContainer);
       return;
     }
@@ -1035,7 +1042,7 @@
     // 监听窗口大小变化，重新渲染表格
     window.addEventListener('resize', () => {
       if (allTransfers && currentAddress) {
-        renderTable();
+        renderTable(filteredTransfers, currentAddress);
       }
     });
     
