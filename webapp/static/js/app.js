@@ -287,8 +287,7 @@
 
   // 更新按钮显示状态
   function updateButtonVisibility() {
-    // 重新筛选数据以确保 filteredTransfers 是最新的
-    filterTransfers();
+    // 不重新筛选数据，只根据当前状态更新按钮显示
     const hasData = filteredTransfers && filteredTransfers.length > 0;
     
     // 控制按钮的显示
