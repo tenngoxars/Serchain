@@ -42,6 +42,14 @@
       builtBy: "开发者：",
       viewOnGitHub: "GitHub 源码",
       apacheLicense: "Apache-2.0 开源协议",
+      "404.title": "页面未找到",
+      "404.subtitle": "抱歉，您访问的页面不存在",
+      "404.message": "您访问的页面可能已被删除、重命名或暂时不可用。",
+      "404.suggestion": "请检查URL是否正确，或返回首页重新开始。",
+      "404.home": "返回首页",
+      "404.back": "返回上页",
+      "404.help": "如果您认为这是一个错误，请",
+      "404.contact": "联系我们",
       locale: "zh-CN"
     },
     en: {
@@ -85,6 +93,14 @@
       builtBy: "Built by",
       viewOnGitHub: "View on GitHub",
       apacheLicense: "Apache-2.0 License",
+      "404.title": "Page Not Found",
+      "404.subtitle": "Sorry, the page you're looking for doesn't exist",
+      "404.message": "The page you're looking for may have been deleted, renamed, or is temporarily unavailable.",
+      "404.suggestion": "Please check if the URL is correct, or return to the homepage to start over.",
+      "404.home": "Go Home",
+      "404.back": "Go Back",
+      "404.help": "If you believe this is an error, please ",
+      "404.contact": "contact us",
       locale: "en-US"
     }
   };
